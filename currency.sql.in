@@ -1,0 +1,200 @@
+/* contrib/currency/currency.sql.in */
+
+-- Adjust this setting to control where the objects get created.
+SET search_path = public;
+
+-----------------------------------------------------------------------------
+--                            CURRENCY_CODE                                --
+-----------------------------------------------------------------------------
+
+--
+--	Input and output functions and the type itself:
+
+
+CREATE TYPE currency_code;
+
+CREATE OR REPLACE FUNCTION currency_code_in(cstring)
+	RETURNS currency_code
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_code_out(currency_code)
+	RETURNS cstring
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_code_send(currency_code)
+	RETURNS bytea
+	AS 'int2send'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_code_recv(internal)
+	RETURNS currency_code
+	AS 'int2recv'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_code_in_text(text)
+	RETURNS currency_code
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_code_out_text(currency_code)
+	RETURNS text
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE TYPE currency_code (
+	INPUT = currency_code_in,
+	OUTPUT = currency_code_out,
+-- values of internallength, passedbyvalue, alignment, and storage are copied from the named type.
+	LIKE = int2,
+	SEND = currency_code_send,
+	RECEIVE = currency_code_recv,
+-- string category, to automatically try string conversion etc
+	CATEGORY = 'S',
+	PREFERRED = false
+);
+
+--
+--	Comparison functions
+--
+CREATE OR REPLACE FUNCTION eq(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2eq'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION ne(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2ne'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION le(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2le'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION lt(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2lt'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION ge(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2ge'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gt(currency_code, currency_code)
+	RETURNS bool
+	AS 'int2gt'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION btcmp_currency_code(currency_code, currency_code)
+	RETURNS int4
+	AS 'btint2cmp'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+-- this function seems to "hash" the int2 to a much bigger size; eg
+-- 1 => -1905060026
+CREATE OR REPLACE FUNCTION hash_currency_code(currency_code)
+	RETURNS int4
+	AS 'hashint2'
+	LANGUAGE internal STRICT IMMUTABLE;
+--
+--	Now the operators.
+--
+CREATE OPERATOR = (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = <>,
+	procedure = eq,
+	restrict = eqsel,
+	commutator = =,
+	join = eqjoinsel,
+	hashes, merges
+);
+
+CREATE OPERATOR <> (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = =,
+	procedure = ne,
+	restrict = neqsel,
+	join = neqjoinsel
+);
+
+CREATE OPERATOR #<# (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = #>=#,
+	procedure = lt
+);
+
+CREATE OPERATOR #<=# (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = #>#,
+	procedure = le
+);
+
+CREATE OPERATOR #># (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = #<=#,
+	procedure = gt
+);
+
+CREATE OPERATOR #>=# (
+	leftarg = currency_code,
+	rightarg = currency_code,
+	negator = #<#,
+	procedure = ge
+);
+
+--
+--  Implicit and assignment type casts.
+--
+
+-- ...not sure yet
+CREATE CAST (currency_code AS text)    WITH FUNCTION currency_code_out_text(currency_code) AS IMPLICIT;
+CREATE CAST (text AS currency_code)    WITH FUNCTION currency_code_in_text(text) AS IMPLICIT;
+
+--
+-- The btree indexing operator class.
+--
+
+CREATE OPERATOR CLASS currency_code_ops
+DEFAULT FOR TYPE CURRENCY_CODE USING btree AS
+    OPERATOR    1   #<#  (currency_code, currency_code),
+    OPERATOR    2   #<=# (currency_code, currency_code),
+    OPERATOR    3   =    (currency_code, currency_code),
+    OPERATOR    4   #>=# (currency_code, currency_code),
+    OPERATOR    5   #>#  (currency_code, currency_code),
+    FUNCTION    1   btcmp_currency_code(currency_code, currency_code);
+
+--
+-- The hash indexing operator class.
+--
+
+CREATE OPERATOR CLASS currency_code_ops
+DEFAULT FOR TYPE currency_code USING hash AS
+    OPERATOR    1   =  (currency_code, currency_code),
+    FUNCTION    1   hash_currency_code(currency_code);
+--
+
+COMMENT ON TYPE currency_code IS 'ISO-4217 currency code';
+
+CREATE TABLE currency_rate (
+       currency_number int2 CHECK (currency_number < 1000),
+       PRIMARY KEY (currency_number),
+       -- not CURRENCY_CODE for bootstrapping reasons
+       currency_code CHAR(3) NOT NULL,
+       name text,
+       symbol text NULL,
+       minor int NOT NULL,
+       precision int NOT NULL default 0,
+       rate real NOT NULL
+);
+
+--
+--	eof
+--

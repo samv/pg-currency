@@ -1,0 +1,85 @@
+--
+-- test the currency_code type
+--
+-- test the in/out functions
+select 'EUR'::currency_code as EUR;
+ eur 
+-----
+ EUR
+(1 row)
+
+select 'gbp'::currency_code as GBP;
+ gbp 
+-----
+ GBP
+(1 row)
+
+select 'nzd'::currency_code as NZD;
+ nzd 
+-----
+ NZD
+(1 row)
+
+-- maxima & minima
+select 'btc'::currency_code as BTC;
+ btc 
+-----
+ BTC
+(1 row)
+
+select 'xxx'::currency_code as XXX;
+ xxx 
+-----
+ XXX
+(1 row)
+
+-- casts
+select 'thb'::text::currency_code as THB;
+ thb 
+-----
+ THB
+(1 row)
+
+select 'myr'::currency_code::text as MYR;
+ myr 
+-----
+ MYR
+(1 row)
+
+-- exceptions
+select '0rz'::currency_code as err_badchar;
+ERROR:  invalid currency code '0rz'
+LINE 1: select '0rz'::currency_code as err_badchar;
+               ^
+select 'NZQ'::currency_code as err_nocode;
+ERROR:  unknown currency code 'NZQ'
+LINE 1: select 'NZQ'::currency_code as err_nocode;
+               ^
+-- cast from int2 is illegal
+SELECT (0::int2)::currency_code AS err_nocast;
+ERROR:  invalid currency code '0'
+-- comparison functions - public
+SELECT 'chf'::currency_code = 'CHF'::currency_code AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'sek'::currency_code <> 'sek'::currency_code AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'RUB'::currency_code = 'EEK'::currency_code AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'EUR'::currency_code <> 'USD'::currency_code AS t;
+ t 
+---
+ t
+(1 row)
+
