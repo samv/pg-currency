@@ -59,7 +59,8 @@ This contains:
   minor: for currencies which use a minor currency unit, the number of
          decimal points between the major and the minor currency unit.
          eg 2 for USD, EUR, 0 for currencies which don't use a minor
-         currency unit.
+         currency unit.  For divisible, high unit value currencies
+         like gold etc, use 5 or higher.
 
   precision: for currencies with large numeric values, eg INR, this
              may be set to 1 or 2 to prevent useless precision being

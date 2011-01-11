@@ -1,7 +1,7 @@
 /*
  * PostgreSQL type definitions for currency_code type
  * Written by Sam Vilain
- * samv@adioso.com
+ * sam.vilain@adioso.com
  *
  * contrib/adioso/currency_code.c
  */
@@ -27,17 +27,6 @@ PG_MODULE_MAGIC;
  * against the currency_rate table and saved as that code's
  * corresponding 3-digit code.
  */
-
-static CommandId ccc_cmdid = -1;
-
-typedef struct ccc_ent
-{
-	int16 currency_number;
-	char currency_code[4];
-} ccc_ent;
-
-static ccc_ent* currency_code_cache;
-static int currency_code_cache_size;
 
 int _update_currency_code_cache() {
 	int res, i;
@@ -108,10 +97,9 @@ int _update_currency_code_cache() {
 inline int emit_currency_code_buf(int16 currency_number, char* result) {
 	int max, min, i;
 	int16 f;
-	if (ccc_cmdid != GetCurrentCommandId(false)) {
-		if (!_update_currency_code_cache())
-			goto error_out;
-	}
+
+	update_currency_code_cache();
+
 	min = 0;
 	max = currency_code_cache_size - 1;
 
@@ -134,7 +122,6 @@ inline int emit_currency_code_buf(int16 currency_number, char* result) {
 			max = i - 1;
 		}
 	}
-error_out:
 	/* elog(WARNING, "emit_currency_code_buf returning 0"); */
 	result[0] = '\0';
 	return 0;
@@ -144,10 +131,7 @@ int16 parse_currency_code(char* str)
 {
 	int i;
 	char uc_str[4];
-	if (ccc_cmdid != GetCurrentCommandId(false)) {
-		if (!_update_currency_code_cache())
-			goto error_out;
-	}
+	update_currency_code_cache();
 	/* uppercase str */
 	for (i=0; i<3; i++) {
 		uc_str[i] = str[i] & 0x5f;
@@ -166,7 +150,6 @@ int16 parse_currency_code(char* str)
 		}
 	}
 	elog(ERROR, "unknown currency code '%s'", (char*)&uc_str);
-error_out:
 	return -1;
 }
 
