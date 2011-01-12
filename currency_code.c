@@ -92,6 +92,7 @@ int _update_currency_code_cache() {
 
 	/* elog(WARNING, "SPI finished"); */
 	ccc_cmdid = GetCurrentCommandId(false);
+	ccc_txid = GetCurrentTransactionId();
 	return currency_code_cache_size;
 }
 

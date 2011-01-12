@@ -20,6 +20,7 @@ inline int emit_currency_code_buf(int16 currency_code, char* result);
 
 char* emit_currency_code(int16 currency_code);
 
+static TransactionId ccc_txid = -1;
 static CommandId ccc_cmdid = -1;
 
 typedef struct ccc_ent
@@ -38,7 +39,9 @@ static int currency_code_cache_size;
 int _update_currency_code_cache();
 
 inline void update_currency_code_cache() {
-	if (ccc_cmdid != GetCurrentCommandId(false)) {
+	if (ccc_cmdid != GetCurrentCommandId(false) ||
+	    ccc_txid != GetCurrentTransactionId()
+		) {
 		if (!_update_currency_code_cache()) {
 			elog(ERROR, "failed to update currency code cache");
 		}
