@@ -33,8 +33,8 @@ int _update_currency_code_cache() {
 	HeapTuple tuple;
 	TupleDesc tupdesc;
 	Datum attr;
-	Oid typoutput;
-	bool typisvarlena, isnull;
+	Oid typoutput_code, typoutput_sym, typoutput_rate;
+	bool junk, isnull;
 	char* outputstr;
 
 	if (SPI_connect() == SPI_ERROR_CONNECT) {
@@ -71,20 +71,59 @@ int _update_currency_code_cache() {
 	tupdesc = SPI_tuptable->tupdesc;
 	getTypeOutputInfo(
 		tupdesc->attrs[1]->atttypid,
-		&typoutput, &typisvarlena
+		&typoutput_code, &junk
+		);
+	getTypeOutputInfo(
+		tupdesc->attrs[2]->atttypid,
+		&typoutput_sym, &junk
+		);
+	getTypeOutputInfo(
+		tupdesc->attrs[5]->atttypid,
+		&typoutput_rate, &junk
 		);
 
-	/* elog(WARNING, "currency table has %d currencies", SPI_processed); */
+	//elog(WARNING, "currency table has %d currencies", SPI_processed);
 	
 	for (i = 0; i < SPI_processed; i++) {
 		tuple = SPI_tuptable->vals[i];
 		attr = heap_getattr(tuple, 1, tupdesc, &isnull);
 		currency_code_cache[i].currency_number = attr;
 		attr = heap_getattr(tuple, 2, tupdesc, &isnull);
-		outputstr = OidOutputFunctionCall(typoutput, attr);
+		outputstr = OidOutputFunctionCall(typoutput_code, attr);
 		strncpy(currency_code_cache[i].currency_code, outputstr, 4);
-		/* elog(WARNING, "added code[%d]: %d = %s", i, currency_code_cache[i].currency_number, outputstr); */
+		//elog(WARNING, "added code[%d]: %d = %s", i, currency_code_cache[i].currency_number, outputstr);
 		pfree(outputstr);
+		/* symbol */
+		attr = heap_getattr(tuple, 3, tupdesc, &isnull);
+		if (isnull) {
+			currency_code_cache[i].currency_symbol = 0;
+		}
+		else {
+			outputstr = OidOutputFunctionCall(typoutput_sym, attr);
+			currency_code_cache[i].currency_symbol = MemoryContextAlloc(
+				CurTransactionContext,
+				strlen(outputstr) + 1
+				);
+			/* fixme ... alloc new */
+			currency_code_cache[i].currency_symbol = outputstr;
+		}
+
+		/* minor */
+		attr = heap_getattr(tuple, 4, tupdesc, &isnull);
+		currency_code_cache[i].currency_minor = attr;
+		/* precision */
+		attr = heap_getattr(tuple, 5, tupdesc, &isnull);
+		currency_code_cache[i].currency_precision = attr;
+		/* rate */
+		attr = heap_getattr(tuple, 6, tupdesc, &isnull);
+
+		// no doubt this is the 'proper' way to do it...
+		//outputstr = OidOutputFunctionCall(typoutput_rate, attr);
+		//sscanf(outputstr, "%f", &currency_code_cache[i].currency_rate);
+		// ...but this works on 64-bit
+		currency_code_cache[i].currency_rate = *((double*)&attr);
+
+		//elog(WARNING, "added code[%d]: sym = %s, minor = %d, prec = %d, rate = %g", i, currency_code_cache[i].currency_symbol, currency_code_cache[i].currency_minor, currency_code_cache[i].currency_precision, currency_code_cache[i].currency_rate);
 	}
 	/* elog(WARNING, "finished iterating"); */
 

@@ -192,7 +192,7 @@ CREATE TABLE currency_rate (
        symbol char(3) NULL,
        minor int2 NOT NULL,
        precision int2 NOT NULL default 0,
-       rate real NOT NULL
+       rate float8 NOT NULL
 );
 
 --
