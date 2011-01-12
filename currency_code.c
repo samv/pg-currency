@@ -43,7 +43,8 @@ int _update_currency_code_cache() {
 	}
 	res = SPI_execute(
 		"select"
-		" currency_number, currency_code"
+		" currency_number, currency_code, symbol,"
+		" minor, precision, rate"
 		" from currency_rate"
 		" order by currency_number"
 		, true
