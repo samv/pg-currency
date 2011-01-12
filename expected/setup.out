@@ -54,7 +54,7 @@ SELECT
 	num, code, description, minor, (random()+0.5)^3
 from
 	wp_currencies;
-INSERT 0 170
+INSERT 0 153
 -- some rates for testing
 update currency_rate set rate = 3 where currency_code = 'NZD';
 UPDATE 1

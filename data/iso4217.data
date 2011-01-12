@@ -2,14 +2,7 @@ AED	784	2	United Arab Emirates dirham
 AFN	971	2	Afghan afghani
 ALL	008	2	Albanian lek
 AMD	051	2	Armenian dram
-ANG	532	2	Netherlands Antillean guilder
-AOA	973	2	Angolan kwanza
-ARS	032	2	Argentine peso
 AUD	036	2	Australian dollar
-AWG	533	2	Aruban florin
-AZN	944	2	Azerbaijani manat
-BAM	977	2	Bosnia and Herzegovina convertible mark
-BBD	052	2	Barbados dollar
 BDT	050	2	Bangladeshi taka
 BGN	975	2	Bulgarian lev
 BHD	048	3	Bahraini dinar
@@ -18,7 +11,6 @@ BMD	060	2	Bermudian dollar
 BND	096	2	Brunei dollar
 BOB	068	2	Boliviano
 BOV	984	2	Bolivian Mvdol (funds code)
-BRL	986	2	Brazilian real
 BSD	044	2	Bahamian dollar
 BTN	064	2	Bhutanese ngultrum
 BWP	072	2	Botswana pula
@@ -29,15 +21,12 @@ CDF	976	2	Congolese franc
 CHE	947	2	WIR Bank E
 CHF	756	2	Swiss franc
 CHW	948	2	WIR Bank W
-CLF	990	0	Chilean Unidad de Fomento
 CLP	152	0	Chilean peso
 CNY	156	2	Renminbi|Chinese yuan
 COP	170	2	Colombian peso
-COU	970	2	Unidad de Valor Real
 CRC	188	2	Costa Rican colon
 CUC	931	2	Cuban convertible peso
 CUP	192	2	Cuban peso
-CVE	132	0	Cape Verde escudo
 CZK	203	2	Czech koruna
 DJF	262	0	Djiboutian franc
 DKK	208	2	Danish krone
@@ -45,22 +34,16 @@ DOP	214	2	Dominican peso
 DZD	012	2	Algerian dinar
 EEK	233	2	Estonian kroon
 EGP	818	2	Egyptian pound
-ERN	232	2	Eritrean nakfa
-ETB	230	2	Ethiopian birr
 EUR	978	2	Euro
-FJD	242	2	Fiji dollar
 FKP	238	2	Falkland Islands pound
 GBP	826	2	Pound sterling
 GEL	981	2	Georgian lari
-GHS	936	2	Ghanaian cedi
 GIP	292	2	Gibraltar pound
 GMD	270	2	Gambian dalasi
 GNF	324	0	Guinean franc
 GTQ	320	2	Guatemalan quetzal
 GYD	328	2	Guyanese dollar
 HKD	344	2	Hong Kong dollar
-HNL	340	2	Honduran lempira
-HRK	191	2	Croatian kuna
 HTG	332	2	Haitian gourde
 HUF	348	2	Hungarian forint
 IDR	360	0	Indonesian rupiah
