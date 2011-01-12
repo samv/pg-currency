@@ -26,6 +26,10 @@ typedef struct ccc_ent
 {
 	int16 currency_number;
 	char currency_code[4];
+	int16 currency_minor;
+	int16 currency_precision;
+	float currency_rate;
+	char* currency_symbol;
 } ccc_ent;
 
 static ccc_ent* currency_code_cache;
