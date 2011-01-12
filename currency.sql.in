@@ -190,8 +190,8 @@ CREATE TABLE currency_rate (
        currency_code CHAR(3) NOT NULL,
        name text,
        symbol char(3) NULL,
-       minor int NOT NULL,
-       precision int NOT NULL default 0,
+       minor int2 NOT NULL,
+       precision int2 NOT NULL default 0,
        rate real NOT NULL
 );
 
