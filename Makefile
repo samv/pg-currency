@@ -15,3 +15,5 @@ top_builddir = ../..
 include $(top_builddir)/src/Makefile.global
 include $(top_srcdir)/contrib/contrib-global.mk
 endif
+
+currency_code.o: currency_code.c currency_code.h
