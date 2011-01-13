@@ -1,7 +1,7 @@
 # contrib/currency/Makefile
 
 MODULE_big = currency
-OBJS = currency_code.o
+OBJS = currency_code.o currency.o
 DATA_built = currency.sql
 DATA = uninstall_currency.sql
 
@@ -17,3 +17,4 @@ include $(top_srcdir)/contrib/contrib-global.mk
 endif
 
 currency_code.o: currency_code.c currency_code.h
+currency.o: currency.c currency_code.h

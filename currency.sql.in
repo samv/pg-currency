@@ -190,10 +190,45 @@ CREATE TABLE currency_rate (
        currency_code CHAR(3) NOT NULL,
        name text,
        symbol char(3) NULL,
-       minor int2 NOT NULL,
+       minor int2 NOT NULL CHECK (minor <= 9 AND minor >= 0),
        precision int2 NOT NULL default 0,
        rate float8 NOT NULL
 );
+
+-----------------------------------------------------------------------------
+--                               CURRENCY                                  --
+-----------------------------------------------------------------------------
+
+--
+--	Input and output functions and the type itself:
+
+
+CREATE TYPE currency;
+
+CREATE OR REPLACE FUNCTION currency_in_cstring(cstring)
+	RETURNS currency
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_out_cstring(currency)
+	RETURNS cstring
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE TYPE currency (
+	INPUT = currency_in_cstring,
+	OUTPUT = currency_out_cstring,
+	INTERNALLENGTH = 12,
+	STORAGE = plain,
+-- string category, to automatically try string conversion etc
+	CATEGORY = 'S',
+	PREFERRED = false
+);
+
+--
+--	Comparison functions
+--
+COMMENT ON TYPE currency IS 'money, with validated currency';
 
 --
 --	eof

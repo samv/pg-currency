@@ -102,7 +102,7 @@ int _update_currency_code_cache() {
 		attr = heap_getattr(tuple, 2, tupdesc, &isnull);
 		outputstr = OidOutputFunctionCall(typoutput_code, attr);
 		strncpy(currency_code_cache[i].currency_code, outputstr, 4);
-		//elog(WARNING, "added code[%d]: %d = %s", i, currency_code_cache[i].currency_number, outputstr);
+		elog(WARNING, "added code[%d]: %d = %s", i, currency_code_cache[i].currency_number, outputstr);
 		pfree(outputstr);
 		/* symbol */
 		attr = heap_getattr(tuple, 3, tupdesc, &isnull);
@@ -134,7 +134,7 @@ int _update_currency_code_cache() {
 		// ...but this works on 64-bit
 		currency_code_cache[i].currency_rate = *((double*)&attr);
 
-		//elog(WARNING, "added code[%d]: sym = %s, minor = %d, prec = %d, rate = %g", i, currency_code_cache[i].currency_symbol, currency_code_cache[i].currency_minor, currency_code_cache[i].currency_precision, currency_code_cache[i].currency_rate);
+		elog(WARNING, "added code[%d]: sym = %s, minor = %d, prec = %d, rate = %g", i, currency_code_cache[i].currency_symbol, currency_code_cache[i].currency_minor, currency_code_cache[i].currency_precision, currency_code_cache[i].currency_rate);
 	}
 	/* elog(WARNING, "finished iterating"); */
 
