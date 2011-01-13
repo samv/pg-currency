@@ -1,4 +1,7 @@
 
+#ifndef CURRENCY_CODE_H
+#define CURRENCY_CODE_H
+
 #include "postgres.h"
 
 #include <time.h>
@@ -16,7 +19,7 @@ typedef int16 currency_code;
 
 int16 parse_currency_code(char* str);
 
-inline int emit_currency_code_buf(int16 currency_code, char* result);
+int emit_currency_code_buf(int16 currency_code, char* result);
 
 char* emit_currency_code(int16 currency_code);
 
@@ -38,12 +41,8 @@ static int currency_code_cache_size;
 
 int _update_currency_code_cache();
 
-inline void update_currency_code_cache() {
-	if (ccc_cmdid != GetCurrentCommandId(false) ||
-	    ccc_txid != GetCurrentTransactionId()
-		) {
-		if (!_update_currency_code_cache()) {
-			elog(ERROR, "failed to update currency code cache");
-		}
-	}
-}
+inline void update_currency_code_cache();
+
+ccc_ent* lookup_currency_number(int16 currency_number);
+
+#endif

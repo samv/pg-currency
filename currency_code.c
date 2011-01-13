@@ -28,6 +28,17 @@ PG_MODULE_MAGIC;
  * corresponding 3-digit code.
  */
 
+inline void update_currency_code_cache()
+{
+	if (ccc_cmdid != GetCurrentCommandId(false) ||
+	    ccc_txid != GetCurrentTransactionId()
+		) {
+		if (!_update_currency_code_cache()) {
+			elog(ERROR, "failed to update currency code cache");
+		}
+	}
+}
+
 int _update_currency_code_cache() {
 	int res, i;
 	HeapTuple tuple;
@@ -135,26 +146,17 @@ int _update_currency_code_cache() {
 	return currency_code_cache_size;
 }
 
-inline int emit_currency_code_buf(int16 currency_number, char* result) {
-	int max, min, i;
-	int16 f;
-
+ccc_ent* lookup_currency_number(int16 currency_number) {
+	int max, min, i, f;
 	update_currency_code_cache();
-
 	min = 0;
 	max = currency_code_cache_size - 1;
 
 	while (min <= max) {
 		i = (min + max) >> 1;
-		/* elog(WARNING, "emit_currency_code_buf, i = %d", i); */
 		f = currency_code_cache[i].currency_number;
 		if ( f == currency_number ) {
-			/* elog(WARNING, "emit_currency_code_buf, found"); */
-			strncpy( result,
-				 currency_code_cache[i].currency_code,
-				 4
-				);
-			return 1;
+			return &currency_code_cache[i];
 		}
 		else if ( f < currency_number ) {
 			min = i + 1;
@@ -163,9 +165,19 @@ inline int emit_currency_code_buf(int16 currency_number, char* result) {
 			max = i - 1;
 		}
 	}
-	/* elog(WARNING, "emit_currency_code_buf returning 0"); */
-	result[0] = '\0';
 	return 0;
+}
+
+int emit_currency_code_buf(int16 currency_number, char* result) {
+	ccc_ent *found = lookup_currency_number(currency_number);
+	if (found) {
+		strncpy( result, found->currency_code, 4 );
+		return 1;
+	}
+	else {
+		result[0] = '\0';
+		return 0;
+	}
 }
 
 int16 parse_currency_code(char* str)
