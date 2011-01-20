@@ -26,11 +26,5 @@ DROP FUNCTION gt(tla, tla);
 DROP FUNCTION btcmp_tla(tla, tla);
 DROP FUNCTION hash_tla(tla);
 
-DROP FUNCTION tla_in(cstring);
-DROP FUNCTION tla_out(tla);
-DROP FUNCTION tla_send(tla);
-DROP FUNCTION tla_recv(internal);
-DROP FUNCTION tla_in_text(text);
-DROP FUNCTION tla_out_text(tla);
-
 DROP TYPE tla CASCADE;
+
