@@ -79,3 +79,198 @@ SELECT 'EUR'::tla <> 'USD'::tla AS t;
  t
 (1 row)
 
+-- comparison functions - only for b-tree use
+SELECT 'OWL'::tla #<# 'OWL'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'OWL'::tla #<=# 'OWL'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'OWL'::tla #>=# 'OWL'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'OWL'::tla #># 'OWL'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'YAK'::tla #<# 'ELK'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'YAK'::tla #<=# 'ELK'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'YAK'::tla #>=# 'ELK'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'YAK'::tla #># 'ELK'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'ELK'::tla #<# 'YAK'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'ELK'::tla #<=# 'YAK'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'ELK'::tla #>=# 'YAK'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'ELK'::tla #># 'YAK'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+-- create some tables, testing the indexing capability
+create table scrabble (
+       word tla,
+       primary key (word),
+       score integer null
+);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "scrabble_pkey" for table "scrabble"
+CREATE TABLE
+create table twl98 (
+       primary key (word)
+) inherits (scrabble);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "twl98_pkey" for table "twl98"
+CREATE TABLE
+\copy twl98 from 'data/twl98.data'
+create table sowpods (
+       primary key (word)
+) inherits (scrabble);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "sowpods_pkey" for table "sowpods"
+CREATE TABLE
+\copy sowpods from 'data/sowpods.data'
+-- test order by
+select * from sowpods order by word limit 10;
+ word | score 
+------+-------
+ AAH  |      
+ AAL  |      
+ ABA  |      
+ ABB  |      
+ ABO  |      
+ ABY  |      
+ ACE  |      
+ ACH  |      
+ ACT  |      
+ ADD  |      
+(10 rows)
+
+-- test joining on the column
+select count(*) as common from sowpods join twl98 using (word);
+ common 
+--------
+    920
+(1 row)
+
+select count(*) as twl98_only from twl98 left join sowpods using (word)
+       where sowpods.word is null;
+ twl98_only 
+------------
+         52
+(1 row)
+
+select count(*) as sowpods_only from sowpods left join twl98 using (word)
+       where twl98.word is null;
+ sowpods_only 
+--------------
+          235
+(1 row)
+
+-- test send/recv
+\copy sowpods to 'data/sowpods.data.bin' with binary;
+create temporary table sowpods_reload (
+       primary key (word)
+) inherits (scrabble);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "sowpods_reload_pkey" for table "sowpods_reload"
+CREATE TABLE
+\copy sowpods_reload from 'data/sowpods.data.bin' with binary;
+select ( select count(*) from sowpods_reload ) - ( select count(*) from sowpods ) as zero;
+ zero 
+------
+    0
+(1 row)
+
+select ( select count(*) from sowpods ) - ( select count(*) from sowpods join sowpods_reload using (word) ) as zero;
+ zero 
+------
+    0
+(1 row)
+
+create table scrabble_letters (
+       letter char(1),
+       primary key (letter),
+       score int2
+);
+NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "scrabble_letters_pkey" for table "scrabble_letters"
+CREATE TABLE
+\copy scrabble_letters from 'data/scrabble_letters.tsv'
+-- score the tables!
+create or replace function score(text) returns bigint as $$
+       select sum(score)
+       from regexp_split_to_table($1, '') as x
+            join scrabble_letters on (letter = x)
+$$ language 'sql';
+CREATE FUNCTION
+-- test that the casts work for functions which take text arguments
+update scrabble
+   set score = score(word);
+UPDATE 3282
+-- improve your scrabble game
+select a.word, a.score from sowpods a join twl98 using (word) order by a.score desc limit 20;
+ word | score 
+------+-------
+ ZAX  |    19
+ ZEK  |    16
+ FEZ  |    15
+ WIZ  |    15
+ PYX  |    15
+ FIZ  |    15
+ BIZ  |    14
+ ZIP  |    14
+ ZAP  |    14
+ KEX  |    14
+ COZ  |    14
+ HEX  |    13
+ FIX  |    13
+ HAJ  |    13
+ FOX  |    13
+ JEW  |    13
+ FAX  |    13
+ VEX  |    13
+ OXY  |    13
+ JAW  |    13
+(20 rows)
+
