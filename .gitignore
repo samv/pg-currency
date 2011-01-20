@@ -3,3 +3,4 @@
 *.testout
 /tmp
 /currency.sql
+data/*.bin
