@@ -1,0 +1,140 @@
+README for currency contrib module
+----------------------------------
+
+This postgres module implements a fast, fixed point multi-currency
+money type.
+
+* support for up to 999 currencies in a currency lookup table
+
+* monetary values stored in 10 bytes
+
+* convenient conversion between currencies
+
+* addition of values in different currencies; nomination of a
+  "neutral" currency via auxilliary table
+
+* fast bulk comparisons (eg sorting a large result set by price), by
+  internally caching exchange rates table
+
+
+Currency Restrictions
+---------------------
+
+The chief goal of this type is to make currency operations as fast as
+possible.  In Postgres, this means using a "basic" type.
+
+Gains could potentially be had from using "passedbyvalue", but on a
+32-bit system, there is not a lot of room in a "Datum", so when using
+currency on that system, the maximum value is quite small; 32 bits,
+minus 1 sign bit, minus 10 currency code bits, and with one
+hidden/rounding error bit means that the maximum this type can
+represent would be only about $2,000.  While a 64-bit system, the
+limit is much higher, at $1 trillion or so, it would likely offer only
+a trivial gain in any case.
+
+
+Defined Entities
+----------------
+
+TLA is defined as a basic type, represented as a 15-bit quantity
+internally (stored in an int2)
+
+CURRENCY is also defined as a basic type, which wraps the "numeric"
+type and associates a TLA with it; the currency code.
+
+CURRENCY_RATE is a defined lookup table; entries must be inserted into
+it before any values can be constructed.
+
+This contains:
+
+  currency_code: a three-letter currency code
+
+  name: an arbitrary text comment for the code
+
+  symbol: prefix for display purposes (may be NULL, in which case the
+          code is used as a suffix instead)
+
+  minor: for currencies which use a minor currency unit, the number of
+         decimal points between the major and the minor currency unit.
+         eg 2 for USD, EUR, 0 for currencies which don't use a minor
+         currency unit.  For divisible, high unit value currencies
+         like gold etc, use 5 or higher.
+
+  rate: conversion rate to the neutral currency
+
+
+Supported Operations
+--------------------
+
+Conversion to/from text:
+
+    '100EUR'::currency        =  '100 EUR'
+    '-100EUR'::currency       = '-100 EUR'
+    '+100.000EUR'::currency   =  '100.000 EUR'
+
+Printing using relevant currency sign:
+
+    #'100EUR'::currency       =   '€100.00'
+
+Get currency component out:
+
+    code('100EUR'::currency)  = 'EUR'::currency_code
+
+Valid ways to combine a currency code and a number:
+
+    100 * 'EUR'::currency_code
+    (100::text || 'EUR')::currency
+
+Conversion to a particular currency:
+
+    '100EUR'::currency->'USD' = '132.40 USD'::currency
+
+Addition of units (assuming BTC, exchanging at 4 BTC = 1 USD is used a
+neutral currency):
+
+    '100EUR'::currency + '10USD'::currency = '5997.19 BTC'::currency
+
+Other math on currency units:
+
+    '100EUR'::currency / 7     =  '14.28 EUR'::currency
+    '14.28EUR'::currency * 7   =  '99.96 EUR'::currency
+    '100EUR'::currency / 7 * 7 = '100.00 EUR'::currency (see below)
+
+    '100EUR'::currency / '10EUR' = 10::real
+
+    '100EUR'::currency + 10                => type error
+    '100EUR'::currency * '10EUR'::currency => type error
+
+Comparisons:
+
+    '100EUR'::currency > '100GBP'::currency
+    ... ORDER BY my_currency_column;
+
+Indexing: B-Tree indexing cannot be supported, as the comparison
+function is not stable across transactions.  Hash indexing is
+supported, and based on the display figure (ie, ignoring the internal
+precision digit)
+
+
+Rounding
+--------
+
+Internal representation always stores one more digit than is necessary
+for the currency type.  It is not possible to construct a currency
+amount with a non-zero value in this hidden digit, but conversions and
+mathematical operations on the values may.
+
+To see the internal precision, you can use raw():
+
+    '100EUR'::currency->'GBP'      = '84.678 GBP'
+    round('100EUR'::currency->'GBP') = '84.68 GBP'
+
+The rounding rule applied is dutch rounding (round half to nearest
+even), as IEEE and regular banking rules.
+
+
+Copyright and License
+---------------------
+This contrib/ module is Copyright (c) 2010, Adioso Ltd.  This module
+is free software; you may use it under the same terms as Postgres
+itself.

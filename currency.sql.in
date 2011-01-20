@@ -1,0 +1,188 @@
+/* contrib/currency/currency.sql.in */
+
+-- Adjust this setting to control where the objects get created.
+SET search_path = public;
+
+-----------------------------------------------------------------------------
+--                            CURRENCY_CODE                                --
+-----------------------------------------------------------------------------
+
+--
+--	Input and output functions and the type itself:
+
+
+CREATE TYPE tla;
+
+CREATE OR REPLACE FUNCTION tla_in(cstring)
+	RETURNS tla
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tla_out(tla)
+	RETURNS cstring
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tla_send(tla)
+	RETURNS bytea
+	AS 'int2send'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tla_recv(internal)
+	RETURNS tla
+	AS 'int2recv'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tla_in_text(text)
+	RETURNS tla
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION tla_out_text(tla)
+	RETURNS text
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE TYPE tla (
+	INPUT = tla_in,
+	OUTPUT = tla_out,
+-- values of internallength, passedbyvalue, alignment, and storage are copied from the named type.
+	LIKE = int2,
+	SEND = tla_send,
+	RECEIVE = tla_recv,
+-- string category, to automatically try string conversion etc
+	CATEGORY = 'S',
+	PREFERRED = false
+);
+
+--
+--	Comparison functions
+--
+CREATE OR REPLACE FUNCTION eq(tla, tla)
+	RETURNS bool
+	AS 'int2eq'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION ne(tla, tla)
+	RETURNS bool
+	AS 'int2ne'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION le(tla, tla)
+	RETURNS bool
+	AS 'int2le'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION lt(tla, tla)
+	RETURNS bool
+	AS 'int2lt'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION ge(tla, tla)
+	RETURNS bool
+	AS 'int2ge'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION gt(tla, tla)
+	RETURNS bool
+	AS 'int2gt'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION btcmp_tla(tla, tla)
+	RETURNS int4
+	AS 'btint2cmp'
+	LANGUAGE internal STRICT IMMUTABLE;
+
+-- this function seems to "hash" the int2 to a much bigger size; eg
+-- 1 => -1905060026
+CREATE OR REPLACE FUNCTION hash_tla(tla)
+	RETURNS int4
+	AS 'hashint2'
+	LANGUAGE internal STRICT IMMUTABLE;
+--
+--	Now the operators.
+--
+CREATE OPERATOR = (
+	leftarg = tla,
+	rightarg = tla,
+	negator = <>,
+	procedure = eq,
+	restrict = eqsel,
+	commutator = =,
+	join = eqjoinsel,
+	hashes, merges
+);
+
+CREATE OPERATOR <> (
+	leftarg = tla,
+	rightarg = tla,
+	negator = =,
+	procedure = ne,
+	restrict = neqsel,
+	join = neqjoinsel
+);
+
+CREATE OPERATOR #<# (
+	leftarg = tla,
+	rightarg = tla,
+	negator = #>=#,
+	procedure = lt
+);
+
+CREATE OPERATOR #<=# (
+	leftarg = tla,
+	rightarg = tla,
+	negator = #>#,
+	procedure = le
+);
+
+CREATE OPERATOR #># (
+	leftarg = tla,
+	rightarg = tla,
+	negator = #<=#,
+	procedure = gt
+);
+
+CREATE OPERATOR #>=# (
+	leftarg = tla,
+	rightarg = tla,
+	negator = #<#,
+	procedure = ge
+);
+
+--
+--  Implicit and assignment type casts.
+--
+
+-- ...not sure yet
+CREATE CAST (tla AS text)    WITH FUNCTION tla_out_text(tla) AS IMPLICIT;
+CREATE CAST (text AS tla)    WITH FUNCTION tla_in_text(text) AS IMPLICIT;
+
+--
+-- The btree indexing operator class.
+--
+
+CREATE OPERATOR CLASS tla_ops
+DEFAULT FOR TYPE TLA USING btree AS
+    OPERATOR    1   #<#  (tla, tla),
+    OPERATOR    2   #<=# (tla, tla),
+    OPERATOR    3   =    (tla, tla),
+    OPERATOR    4   #>=# (tla, tla),
+    OPERATOR    5   #>#  (tla, tla),
+    FUNCTION    1   btcmp_tla(tla, tla);
+
+--
+-- The hash indexing operator class.
+--
+
+CREATE OPERATOR CLASS tla_ops
+DEFAULT FOR TYPE tla USING hash AS
+    OPERATOR    1   =  (tla, tla),
+    FUNCTION    1   hash_tla(tla);
+--
+
+COMMENT ON TYPE tla IS 'three-letter codes in an int2';
+
+--
+--	eof
+--

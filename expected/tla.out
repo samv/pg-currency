@@ -1,0 +1,81 @@
+--
+-- test the tla type
+--
+-- test the in/out functions
+select 'EUR'::tla as EUR;
+ eur 
+-----
+ EUR
+(1 row)
+
+select 'gbp'::tla as GBP;
+ gbp 
+-----
+ GBP
+(1 row)
+
+select 'nzd'::tla as NZD;
+ nzd 
+-----
+ NZD
+(1 row)
+
+-- maxima & minima
+select 'btc'::tla as BTC;
+ btc 
+-----
+ BTC
+(1 row)
+
+select 'xxx'::tla as XXX;
+ xxx 
+-----
+ XXX
+(1 row)
+
+-- casts
+select 'thb'::text::tla as THB;
+ thb 
+-----
+ THB
+(1 row)
+
+select 'myr'::tla::text as MYR;
+ myr 
+-----
+ MYR
+(1 row)
+
+-- exceptions
+select '0rz'::tla as err_badchar;
+ERROR:  invalid char "0" in tla
+LINE 1: select '0rz'::tla as err_badchar;
+               ^
+-- cast from int2 is illegal
+SELECT (0::int2)::tla AS err_nocast;
+ERROR:  invalid char "0" in tla
+-- comparison functions - public
+SELECT 'chf'::tla = 'CHF'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
+SELECT 'sek'::tla <> 'sek'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'RUB'::tla = 'EEK'::tla AS f;
+ f 
+---
+ f
+(1 row)
+
+SELECT 'EUR'::tla <> 'USD'::tla AS t;
+ t 
+---
+ t
+(1 row)
+
