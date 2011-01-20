@@ -53,7 +53,8 @@ case $1 in
         ;;
 
     *)
-        for test in setup tla uninstall
+	[ -z "$debug" ] && uninstall=uninstall
+        for test in setup tla $uninstall
         do
             $pgbin/psql -a postgres < sql/$test.sql > expected/$test.testout 2>&1
             diff -F '^-- ' -u expected/$test.out expected/$test.testout && echo PASS: $test "($(wc -l expected/$test.out|cut -f1 -d\ ) lines)"
