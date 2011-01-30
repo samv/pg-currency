@@ -3,6 +3,8 @@
 -- Adjust this setting to control where the objects get dropped.
 SET search_path = public;
 
+DROP TYPE currency CASCADE;
+
 DROP OPERATOR CLASS tla_ops USING btree CASCADE;
 DROP OPERATOR CLASS tla_ops USING hash CASCADE;
 

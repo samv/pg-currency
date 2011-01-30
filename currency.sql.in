@@ -184,5 +184,30 @@ DEFAULT FOR TYPE tla USING hash AS
 COMMENT ON TYPE tla IS 'three-letter codes in an int2';
 
 --
+-- the 'currency' type
+--
+CREATE TYPE currency;
+
+CREATE OR REPLACE FUNCTION currency_in_cstring(cstring)
+	RETURNS currency
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION currency_out_cstring(currency)
+	RETURNS cstring
+	AS 'currency'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE TYPE currency (
+	INPUT = currency_in_cstring,
+	OUTPUT = currency_out_cstring,
+-- values of internallength, passedbyvalue, alignment, and storage are copied from the named type.
+	INTERNALLENGTH = variable,
+-- string category, to automatically try string conversion etc
+	CATEGORY = 'S',
+	PREFERRED = false
+);
+
+--
 --	eof
 --

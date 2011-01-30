@@ -1,7 +1,7 @@
 # contrib/currency/Makefile
 
 MODULE_big = currency
-OBJS = tla.o
+OBJS = tla.o currency.o
 SHLIB_LINK = $(filter -lcrypt, $(LIBS))
 DATA_built = currency.sql
 DATA = uninstall_currency.sql
