@@ -128,7 +128,6 @@ currency* parse_currency(char* str)
 
 	if (!(newval->currency_code = parse_tla(&code))) {
 		elog(ERROR, "bad currency code '%s'", &code);
-		goto error_out;
 	}
 
 	//elog(WARNING, "parse_tla called ok, currency_code = %.4x", newval->currency_code);
@@ -136,10 +135,6 @@ currency* parse_currency(char* str)
 	//elog(WARNING, "return struct = %s", dump_hex(newval, VARSIZE(newval)));
 
 	return newval;
-
- error_out:
-	pfree(newval);
-	return 0;
 }
 
 char* emit_currency(currency* amount) {
