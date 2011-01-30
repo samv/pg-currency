@@ -126,6 +126,8 @@ currency* parse_currency(char* str)
 		DatumGetPointer( numeric_val ) + VARHDRSZ,
 		VARSIZE( numeric_val ) - VARHDRSZ );
 
+	pfree(numeric_val);
+
 	if (!(newval->currency_code = parse_tla(&code))) {
 		elog(ERROR, "bad currency code '%s'", &code);
 	}
@@ -160,8 +162,11 @@ char* emit_currency(currency* amount) {
 	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( tv ) );
 	//elog(WARNING, "emit_currency: outstr = %s", outstr);
 
+	pfree(tv);
+
 	res = palloc( strlen(outstr) + 5 );
 	memcpy( res, outstr, strlen(outstr)+1 );
+	pfree(outstr);
 	c = res + strlen(res);
 	*c++ = ' ';
 	emit_tla_buf( amount->currency_code, c );
