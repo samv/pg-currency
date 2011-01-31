@@ -425,3 +425,62 @@ currency_format(PG_FUNCTION_ARGS)
 
 	PG_RETURN_CSTRING(result);
 }
+
+PG_FUNCTION_INFO_V1(currency_convert);
+Datum
+currency_convert(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	int16 target_code = PG_GETARG_DATUM(1);
+
+	struct varlena* neutral;
+	struct varlena* target;
+	ccc_ent *cc_from, *cc_to;
+	currency* newval;
+	char* number;
+
+	update_currency_code_cache();
+	cc_from = lookup_currency_code(amount->currency_code);
+	if (!cc_from)
+		elog(ERROR, "currency code '%s' not in currency_rate table",
+		     emit_tla( amount->currency_code ));
+	cc_to = lookup_currency_code(target_code);
+	if (!cc_to)
+		elog(ERROR, "currency code '%s' not in currency_rate table",
+		     emit_tla( target_code ));
+
+	number = OidFunctionCall1( numeric_out, currency_numeric( amount ) );
+	//elog(WARNING, "converting %s %s to %s", number, emit_tla(cc_from->currency_code), emit_tla(cc_to->currency_code));
+
+	neutral = OidFunctionCall2(
+		numeric_mul,
+		currency_numeric(amount),
+		PointerGetDatum(cc_from->currency_rate)
+		);
+
+	number = OidFunctionCall1( numeric_out, PointerGetDatum( neutral ) );
+	//elog(WARNING, "converted to '%s' neutral", number);
+
+	if (cc_to == currency_code_cache) {
+		target = neutral;
+	}
+	else {
+		target = OidFunctionCall2(
+			numeric_div,
+			PointerGetDatum(neutral),
+			PointerGetDatum(cc_to->currency_rate)
+			);
+		pfree(neutral);
+		//elog(WARNING, "converted to %s %s", number, emit_tla(target_code));
+	}
+
+	alloc_varlena(newval, VARSIZE( target ) + offsetof(currency, numeric) - VARHDRSZ );
+	memcpy( &newval->numeric,
+		DatumGetPointer( target ) + VARHDRSZ,
+		VARSIZE( target ) - VARHDRSZ );
+	newval->currency_code = target_code;
+
+	pfree(target);
+	return newval;
+
+}

@@ -227,6 +227,11 @@ CREATE OR REPLACE FUNCTION format(currency)
 	AS 'currency', 'currency_format'
 	LANGUAGE C STRICT;
 
+CREATE OR REPLACE FUNCTION change(currency, tla)
+	RETURNS currency
+	AS 'currency', 'currency_convert'
+	LANGUAGE C STRICT;
+
 --
 --	eof
 --

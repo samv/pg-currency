@@ -39,6 +39,7 @@ CREATE FUNCTION
 CREATE TYPE
 CREATE TABLE
 CREATE FUNCTION
+CREATE FUNCTION
 RESET
 create table wp_currencies (
        code char(3),
