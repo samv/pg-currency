@@ -24,3 +24,12 @@ select #('123.456 usd'::currency->'eur') as "€ 82.30";
 -- code and value
 select code('100nzd'::currency) as "NZD";
 select value('100nzd'::currency) as "100";
+
+-- and the other way around
+select currency('20', 'nzd') as "20 NZD";
+select ('20'||'nzd')::currency as "20 NZD";
+
+-- the below might be appropriate if 'tla' were actually a currency
+-- code type, but if it's just a generic three letters, it makes no
+-- sense.
+select 20 * 'nzd'::tla as ERROR;

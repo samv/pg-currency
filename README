@@ -74,12 +74,12 @@ Get components out:
     code('100EUR'::currency)  = 'EUR'::tla
     value('100EUR'::currency)  = '100'::numeric
 
-[below this line TODO]
-
 Valid ways to combine a currency code and a number:
 
-    100 * 'EUR'::tla
+    currency(100, 'eur')       = '100 EUR'
     (100::text || 'EUR')::currency
+
+[below this line TODO]
 
 Conversion to a particular currency:
 

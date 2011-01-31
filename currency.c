@@ -503,3 +503,25 @@ currency_value(PG_FUNCTION_ARGS)
 
 	PG_RETURN_POINTER(currency_numeric(amount));
 }
+
+PG_FUNCTION_INFO_V1(currency_compose);
+Datum
+currency_compose(PG_FUNCTION_ARGS)
+{
+	struct tv* number = PG_GETARG_POINTER(0);
+	int16 currency_code = PG_GETARG_DATUM(1);
+	currency* newval;
+
+	alloc_varlena(
+		newval,
+		VARSIZE( number ) + offsetof(currency, numeric) - VARHDRSZ
+		);
+	memcpy(
+		&newval->numeric,
+		DatumGetPointer( number ) + VARHDRSZ,
+		VARSIZE( number ) - VARHDRSZ
+		);
+	newval->currency_code = currency_code;
+
+	PG_RETURN_POINTER(newval);
+}

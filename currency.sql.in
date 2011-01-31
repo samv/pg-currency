@@ -218,6 +218,11 @@ CREATE OR REPLACE FUNCTION value(currency)
 	AS 'currency', 'currency_value'
 	LANGUAGE C STRICT IMMUTABLE;
 
+CREATE OR REPLACE FUNCTION currency(numeric, tla)
+	RETURNS currency
+	AS 'currency', 'currency_compose'
+	LANGUAGE C STRICT IMMUTABLE;
+
 CREATE TABLE currency_rate (
        -- not TLA for bootstrapping reasons
        code TLA NOT NULL,
