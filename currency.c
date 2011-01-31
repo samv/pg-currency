@@ -139,16 +139,9 @@ currency* parse_currency(char* str)
 	return newval;
 }
 
-char* emit_currency(currency* amount) {
-	char* res;
-	char* outstr;
-	char* c;
-
-	/* construct a varlena structure so we can call the
-	 * numeric_out function and have a happy life */
+struct varlena* currency_numeric(currency* amount) {
 	struct varlena* tv;
 
-	//elog(WARNING, "emit_currency: alloc_varlena(tv, %d)", VARSIZE( amount ) - offsetof(currency, numeric) + VARHDRSZ );
 	alloc_varlena(
 		tv,
 		VARSIZE( amount ) - offsetof(currency, numeric) + VARHDRSZ
@@ -158,7 +151,18 @@ char* emit_currency(currency* amount) {
 		VARSIZE( amount ) - offsetof(currency, numeric)
 		);
 
-	//elog(WARNING, "emit_currency: calling numeric_out on %s", dump_hex(tv, VARSIZE(tv)));
+	return tv;
+}
+
+char* emit_currency(currency* amount) {
+	char* res;
+	char* outstr;
+	char* c;
+
+	/* construct a varlena structure so we can call the
+	 * numeric_out function and have a happy life */
+	struct varlena* tv = currency_numeric(amount);
+
 	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( tv ) );
 	//elog(WARNING, "emit_currency: outstr = %s", outstr);
 
