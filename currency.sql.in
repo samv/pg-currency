@@ -240,7 +240,7 @@ CREATE TABLE currency_rate (
 CREATE OR REPLACE FUNCTION format(currency)
 	RETURNS cstring
 	AS 'currency', 'currency_format'
-	LANGUAGE C STRICT;
+	LANGUAGE C STRICT STABLE;
 
 CREATE OPERATOR # (
 	rightarg = currency,
@@ -250,7 +250,7 @@ CREATE OPERATOR # (
 CREATE OR REPLACE FUNCTION change(currency, tla)
 	RETURNS currency
 	AS 'currency', 'currency_convert'
-	LANGUAGE C STRICT;
+	LANGUAGE C STRICT STABLE;
 
 CREATE OPERATOR -> (
 	leftarg = currency,
