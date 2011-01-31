@@ -36,3 +36,16 @@ select '-100.006 eur'::currency as "-100.006 eur";
  -100.006 EUR
 (1 row)
 
+-- formatting for display requires the currency_rates table
+select format('100 nzd'::currency) as "NZD 100.00";
+ NZD 100.00 
+------------
+ NZD 100.00
+(1 row)
+
+select format('-100.006 eur'::currency) as "€ -100.01";
+ € -100.01 
+-----------
+ € -100.01
+(1 row)
+

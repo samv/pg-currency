@@ -208,6 +208,25 @@ CREATE TYPE currency (
 	PREFERRED = false
 );
 
+CREATE TABLE currency_rate (
+       -- not TLA for bootstrapping reasons
+       code TLA NOT NULL,
+       primary key (code),
+       minor int2 NOT NULL CHECK (minor <= 9 AND minor >= 0),
+       symbol varchar(3) NULL,
+       rate numeric NOT NULL,
+       is_exchange boolean not null default 'f',
+       CHECK (NOT is_exchange OR rate = 1),
+       description text
+);
+
+-- functions below are dependent on the currency_rate table (this
+-- doesn't matter, just for reference )
+CREATE OR REPLACE FUNCTION format(currency)
+	RETURNS cstring
+	AS 'currency', 'currency_format'
+	LANGUAGE C STRICT;
+
 --
 --	eof
 --
