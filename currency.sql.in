@@ -237,10 +237,21 @@ CREATE OR REPLACE FUNCTION format(currency)
 	AS 'currency', 'currency_format'
 	LANGUAGE C STRICT;
 
+CREATE OPERATOR # (
+	rightarg = currency,
+	procedure = format
+);
+
 CREATE OR REPLACE FUNCTION change(currency, tla)
 	RETURNS currency
 	AS 'currency', 'currency_convert'
 	LANGUAGE C STRICT;
+
+CREATE OPERATOR -> (
+	leftarg = currency,
+	rightarg = tla,
+	procedure = change
+);
 
 --
 --	eof

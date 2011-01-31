@@ -55,6 +55,12 @@ select format('-100.006 eur'::currency) as "€ -100.01";
  € -100.01
 (1 row)
 
+select #('123.456 gbp'::currency) as "£ 123.46";
+ £ 123.46 
+----------
+ £ 123.46
+(1 row)
+
 -- test conversion
 select change('100 nzd'::currency, 'btc') as "300.00 BTC";
  300.00 BTC 
@@ -66,6 +72,12 @@ select format(change('100 nzd'::currency, 'gbp')) as "£ 42.86";
  £ 42.86 
 ---------
  £ 42.86
+(1 row)
+
+select #('123.456 usd'::currency->'eur') as "€ 82.30";
+ € 82.30 
+---------
+ € 82.30
 (1 row)
 
 -- code and value
