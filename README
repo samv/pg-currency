@@ -69,12 +69,12 @@ Printing using relevant currency sign and precision:
     #'100EUR'::currency        =   '€ 100.00'
     #'100NZD'::currency        =   'NZD 100.00'
 
-[below this line TODO]
-
 Get components out:
 
     code('100EUR'::currency)  = 'EUR'::tla
     value('100EUR'::currency)  = '100'::numeric
+
+[below this line TODO]
 
 Valid ways to combine a currency code and a number:
 

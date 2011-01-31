@@ -484,3 +484,22 @@ currency_convert(PG_FUNCTION_ARGS)
 	return newval;
 
 }
+
+PG_FUNCTION_INFO_V1(currency_code);
+Datum
+currency_code(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	int16 currency_code = amount->currency_code;
+
+	PG_RETURN_DATUM(currency_code);
+}
+
+PG_FUNCTION_INFO_V1(currency_value);
+Datum
+currency_value(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+
+	PG_RETURN_POINTER(currency_numeric(amount));
+}

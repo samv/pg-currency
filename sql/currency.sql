@@ -18,3 +18,7 @@ select format('-100.006 eur'::currency) as "€ -100.01";
 -- test conversion
 select change('100 nzd'::currency, 'btc') as "300.00 BTC";
 select format(change('100 nzd'::currency, 'gbp')) as "£ 42.86";
+
+-- code and value
+select code('100nzd'::currency) as "NZD";
+select value('100nzd'::currency) as "100";

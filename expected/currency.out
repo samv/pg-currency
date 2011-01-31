@@ -68,3 +68,16 @@ select format(change('100 nzd'::currency, 'gbp')) as "£ 42.86";
  £ 42.86
 (1 row)
 
+-- code and value
+select code('100nzd'::currency) as "NZD";
+ NZD 
+-----
+ NZD
+(1 row)
+
+select value('100nzd'::currency) as "100";
+ 100 
+-----
+ 100
+(1 row)
+
