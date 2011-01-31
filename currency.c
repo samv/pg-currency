@@ -113,7 +113,7 @@ currency* parse_currency(char* str)
 
 	// use sscanf, so that whitespace between number and currency
 	// code can be optional.
-	if (sscanf(str, " %s %3c %1c", number, (char*)&code, (char*)&fail) != 2) {
+	if (sscanf(str, " %[0-9.,-] %3c %1c", number, (char*)&code, (char*)&fail) != 2) {
 		elog(ERROR, "bad currency value '%s'", str);
 	}
 	code[3] = '\0';

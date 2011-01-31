@@ -23,6 +23,12 @@ select '-100.00 eur'::currency as "-100.00 eur";
  -100.00 EUR
 (1 row)
 
+select '100eur'::currency as "100 eur";
+ 100 eur 
+---------
+ 100 EUR
+(1 row)
+
 -- these values make no sense, but who cares :)
 select '-100.005 eur'::currency as "-100.005 eur";
  -100.005 eur 
