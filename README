@@ -79,8 +79,6 @@ Valid ways to combine a currency code and a number:
     currency(100, 'eur')       = '100 EUR'
     (100::text || 'EUR')::currency
 
-[below this line TODO]
-
 Conversion to a particular currency:
 
     '100EUR'::currency->'USD' = '132.40 USD'::currency
@@ -88,9 +86,20 @@ Conversion to a particular currency:
 Conversion to the 'exchange' or 'neutral' currency, you can simply
 cast as 'money';
 
-    '100EUR'::currency::money = '600.00'::money
+    '100EUR'::currency::money = '$600.00'::money
 
 Otherwise, you have to use the 'particular currency' mechanism above.
+
+Note that the 'money' type is limited to a 64-bit quantity of whatever
+the smallest unit of currency is.
+
+Comparisons between currency values are supported; they need not be of
+the same currency type.
+
+    '100EUR'::currency > '100GBP'::currency
+    ... ORDER BY my_currency_column;
+
+[below this line TODO]
 
 Addition of units (assuming BTC as the 'exchange' currency, exchanging
 at 4 BTC = 1 USD is used a neutral currency):
@@ -108,10 +117,18 @@ Other math on currency units:
     '100EUR'::currency + 10                => type error
     '100EUR'::currency * '10EUR'::currency => type error
 
-Comparisons:
 
-    '100EUR'::currency > '100GBP'::currency
-    ... ORDER BY my_currency_column;
+Indexing
+--------
+
+To support queries which might join by or sort by currency values,
+there are operator classes defined.
+
+However, do not index currency values; the functions which back them
+are not IMMUTABLE, so if you create indexes with them then those
+indexes may not be able to retrieve your data or otherwise behave
+bizarrely.  Postgres should notice this and refuse to create the
+index, but doesn't currently, so just beware.
 
 
 Rounding

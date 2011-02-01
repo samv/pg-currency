@@ -264,6 +264,108 @@ CREATE OR REPLACE FUNCTION money(currency)
 
 CREATE CAST (currency AS money) WITH FUNCTION money(currency);
 
+CREATE OR REPLACE FUNCTION eq(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_eq'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION ne(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_ne'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION le(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_le'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION lt(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_lt'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION ge(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_ge'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION gt(currency, currency)
+	RETURNS boolean
+	AS 'currency', 'currency_gt'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OR REPLACE FUNCTION btcmp_currency(currency, currency)
+	RETURNS int4
+	AS 'currency', 'currency_btcmp'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OPERATOR = (
+	leftarg = currency,
+	rightarg = currency,
+	negator = <>,
+	procedure = eq,
+	restrict = eqsel,
+	commutator = =,
+	join = eqjoinsel,
+	hashes, merges
+);
+
+CREATE OPERATOR <> (
+	leftarg = currency,
+	rightarg = currency,
+	negator = =,
+	procedure = ne,
+	restrict = neqsel,
+	join = neqjoinsel
+);
+
+CREATE OPERATOR < (
+	leftarg = currency,
+	rightarg = currency,
+	negator = >=,
+	procedure = lt
+);
+
+CREATE OPERATOR <= (
+	leftarg = currency,
+	rightarg = currency,
+	negator = >,
+	procedure = le
+);
+
+CREATE OPERATOR > (
+	leftarg = currency,
+	rightarg = currency,
+	negator = <=,
+	procedure = gt
+);
+
+CREATE OPERATOR >= (
+	leftarg = currency,
+	rightarg = currency,
+	negator = <,
+	procedure = ge
+);
+
+CREATE OR REPLACE FUNCTION hash_currency(currency)
+	RETURNS int4
+	AS 'currency', 'currency_hash'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OPERATOR CLASS currency_ops_hash
+DEFAULT FOR TYPE currency USING hash AS
+    OPERATOR    1   =  (currency, currency),
+    FUNCTION    1   hash_currency(currency);
+
+CREATE OPERATOR CLASS currency_ops
+DEFAULT FOR TYPE currency USING btree AS
+    OPERATOR    1   <  (currency, currency),
+    OPERATOR    2   <= (currency, currency),
+    OPERATOR    3   =  (currency, currency),
+    OPERATOR    4   >= (currency, currency),
+    OPERATOR    5   >  (currency, currency),
+    FUNCTION    1   btcmp_currency(currency, currency);
+
 --
 --	eof
 --

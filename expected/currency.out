@@ -121,9 +121,277 @@ select currency('20', 'nzd')::money as "$60.00";
  $60.00
 (1 row)
 
--- test that there are no casts by default
+-- test comparisons
 select '100 nzd'::currency = '100 nzd'::currency as t;
-ERROR:  operator does not exist: currency = currency
-LINE 1: select '100 nzd'::currency = '100 nzd'::currency as t;
-                                   ^
-HINT:  No operator matches the given name and argument type(s). You might need to add explicit type casts.
+ t 
+---
+ t
+(1 row)
+
+select '100 nzd'::currency = '300 btc'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '100 nzd'::currency =  '50 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '100 nzd'::currency = '101 nzd'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency = '301 btc'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency =  '51 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency = '100 nzd'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '300 btc'::currency = '100 nzd'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '50 eur'::currency  = '100 nzd'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '101 nzd'::currency = '100 nzd'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '301 btc'::currency = '100 nzd'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '51 eur'::currency  = '100 nzd'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+-- !=
+select '100 nzd'::currency != '100 nzd'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency != '300 btc'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency !=  '50 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '100 nzd'::currency != '101 nzd'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '100 nzd'::currency != '301 btc'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '100 nzd'::currency !=  '51 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+-- don't bother with all cases for the other operators
+select '60 usd'::currency = '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '61 usd'::currency = '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '60 usd'::currency = '41 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '60 usd'::currency != '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '61 usd'::currency != '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency != '41 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency < '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '61 usd'::currency < '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '60 usd'::currency < '41 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency <= '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '61 usd'::currency <= '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '60 usd'::currency <= '41 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency > '40 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '61 usd'::currency > '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency > '41 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+select '60 usd'::currency >= '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '61 usd'::currency >= '40 eur'::currency as t;
+ t 
+---
+ t
+(1 row)
+
+select '60 usd'::currency >= '41 eur'::currency as f;
+ f 
+---
+ f
+(1 row)
+
+create table amounts (
+       description text,
+       value currency
+);
+CREATE TABLE
+\copy amounts from 'data/amounts.data'
+-- test sorting
+--select max(value) from amounts;
+select description, value from amounts order by value desc limit 3;
+       description       |   value   
+-------------------------+-----------
+ Tulsi Prawn Vindaloo    | 11.00 USD
+ Daawat Chicken Vindaloo | 10.00 USD
+ Daawat Beef Vindaloo    | 10.00 USD
+(3 rows)
+
+select description, value from amounts order by value asc limit 3;
+      description      |  value   
+-----------------------+----------
+ Tulsi Dal Makhani     | 6.90 NZD
+ Tulsi Vegetable Curry | 6.90 NZD
+ Tulsi Navrattan Korma | 6.90 NZD
+(3 rows)
+
+-- check the hashing function (which is not immutable)
+select hash_currency('100 eur'::currency) = hash_currency('100 eur'::currency) as t;
+ t 
+---
+ t
+(1 row)
+
+select hash_currency('100 eur'::currency) != hash_currency('101 eur'::currency) as t;
+ t 
+---
+ t
+(1 row)
+
+select hash_currency('100 eur'::currency) != hash_currency('100 nzd'::currency) as t;
+ t 
+---
+ t
+(1 row)
+
+select hash_currency('40 eur'::currency) = hash_currency('60 usd'::currency) as t;
+ t 
+---
+ t
+(1 row)
+
+select hash_currency('100 eur'::currency) = hash_currency('100.00 eur'::currency) as t;
+ t 
+---
+ t
+(1 row)
+

@@ -74,7 +74,10 @@ static char *cc_pstrdup(const char *string);
 #define numeric_sub 1725
 #define numeric_mul 1726
 #define numeric_div 1727
+#define numeric_cmp 1769
 #define numeric_uplus 1915
+#define hash_numeric 432
+#define hashint2 449
 
 /* memory/heap structure (not for binary marshalling) */
 typedef struct currency
@@ -555,4 +558,136 @@ currency_money(PG_FUNCTION_ARGS)
 	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( neutral ) );
 	PG_RETURN_POINTER( OidFunctionCall1( cash_in, CStringGetDatum(outstr) ) );
 #endif
+}
+
+/* a <=>-style compare function; caller is expected to have called
+ * update_currency_code_cache() */
+int currency_cmp(currency* a, currency* b)
+{
+	int rv;
+	struct tv *a_n, *b_n;
+	if (a->currency_code == b->currency_code) {
+		a_n = currency_numeric(a);
+		b_n = currency_numeric(b);
+	}
+	else {
+		a_n = currency_neutral(a);
+		b_n = currency_neutral(b);
+	}
+	rv = OidFunctionCall2(
+		numeric_cmp,
+		PointerGetDatum( a_n ),
+		PointerGetDatum( b_n )
+		);
+	pfree(a_n);
+	pfree(b_n);
+	return rv;
+}
+
+PG_FUNCTION_INFO_V1(currency_eq);
+Datum
+currency_eq(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff == 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_ne);
+Datum
+currency_ne(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff != 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_le);
+Datum
+currency_le(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff <= 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_lt);
+Datum
+currency_lt(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff < 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_ge);
+Datum
+currency_ge(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff >= 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_gt);
+Datum
+currency_gt(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_BOOL(diff > 0);
+}
+
+PG_FUNCTION_INFO_V1(currency_btcmp);
+Datum
+currency_btcmp(PG_FUNCTION_ARGS)
+{
+	currency* a = (void*)PG_GETARG_POINTER(0);
+	currency* b = (void*)PG_GETARG_POINTER(1);
+	update_currency_code_cache();
+	int diff = currency_cmp(a, b);
+
+	PG_FREE_IF_COPY(a, 0);
+	PG_FREE_IF_COPY(b, 1);
+	PG_RETURN_INT32(diff);
+}
+
+PG_FUNCTION_INFO_V1(currency_hash);
+Datum
+currency_hash(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	struct tv* numeric;
+	int32 numeric_hash;
+	update_currency_code_cache();
+	numeric = currency_neutral(amount);
+	numeric_hash = OidFunctionCall1(hash_numeric, numeric);
+	pfree(numeric);
+	PG_FREE_IF_COPY(amount, 0);
+
+	PG_RETURN_INT32(numeric_hash);
 }
