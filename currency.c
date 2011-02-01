@@ -436,6 +436,32 @@ currency_format(PG_FUNCTION_ARGS)
 	PG_RETURN_CSTRING(result);
 }
 
+/* convert a currency to a neutral NUMERIC value */
+struct varlena* currency_neutral(currency* amount) {
+	struct varlena* amount_num = currency_numeric(amount);
+	struct varlena* neutral;
+	ccc_ent* cc_info;
+
+	cc_info = lookup_currency_code(amount->currency_code);
+	if (!cc_info)
+		elog(ERROR, "currency code '%s' not in currency_rate table",
+		     emit_tla( amount->currency_code ));
+
+	if (cc_info == currency_code_cache) {
+		return amount_num;
+	}
+	else {
+		neutral = OidFunctionCall2(
+			numeric_mul,
+			currency_numeric(amount),
+			PointerGetDatum(cc_info->currency_rate)
+			);
+		pfree(amount_num);
+
+		return neutral;
+	}
+}
+
 PG_FUNCTION_INFO_V1(currency_convert);
 Datum
 currency_convert(PG_FUNCTION_ARGS)
@@ -445,15 +471,13 @@ currency_convert(PG_FUNCTION_ARGS)
 
 	struct varlena* neutral;
 	struct varlena* target;
-	ccc_ent *cc_from, *cc_to;
+	ccc_ent *cc_to;
 	currency* newval;
 	char* number;
 
 	update_currency_code_cache();
-	cc_from = lookup_currency_code(amount->currency_code);
-	if (!cc_from)
-		elog(ERROR, "currency code '%s' not in currency_rate table",
-		     emit_tla( amount->currency_code ));
+	neutral = currency_neutral(amount);
+
 	cc_to = lookup_currency_code(target_code);
 	if (!cc_to)
 		elog(ERROR, "currency code '%s' not in currency_rate table",
@@ -461,13 +485,6 @@ currency_convert(PG_FUNCTION_ARGS)
 
 	number = OidFunctionCall1( numeric_out, currency_numeric( amount ) );
 	//elog(WARNING, "converting %s %s to %s", number, emit_tla(cc_from->currency_code), emit_tla(cc_to->currency_code));
-
-	neutral = OidFunctionCall2(
-		numeric_mul,
-		currency_numeric(amount),
-		PointerGetDatum(cc_from->currency_rate)
-		);
-
 	number = OidFunctionCall1( numeric_out, PointerGetDatum( neutral ) );
 	//elog(WARNING, "converted to '%s' neutral", number);
 
@@ -540,19 +557,8 @@ currency_money(PG_FUNCTION_ARGS)
 #endif
 
 	update_currency_code_cache();
-	target_code = currency_code_cache->currency_code;
 
-	if (amount->currency_code != target_code) {
-		cc_from = lookup_currency_code(amount->currency_code);
-		neutral = OidFunctionCall2(
-			numeric_mul,
-			currency_numeric(amount),
-			PointerGetDatum(cc_from->currency_rate)
-			);
-	}
-	else {
-		neutral = currency_numeric(amount);
-	}
+	neutral = currency_neutral(amount);
 
 #ifdef numeric_cash
 	PG_RETURN_POINTER( OidFunctionCall1( numeric_cash, neutral ) );
