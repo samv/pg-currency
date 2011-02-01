@@ -114,3 +114,10 @@ ERROR:  operator does not exist: integer * tla
 LINE 1: select 20 * 'nzd'::tla as ERROR;
                   ^
 HINT:  No operator matches the given name and argument type(s). You might need to add explicit type casts.
+-- casting to money : locale dependent test (FIXME)
+select currency('20', 'nzd')::money as "$60.00";
+ $60.00 
+--------
+ $60.00
+(1 row)
+

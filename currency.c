@@ -525,3 +525,45 @@ currency_compose(PG_FUNCTION_ARGS)
 
 	PG_RETURN_POINTER(newval);
 }
+
+#if PG_VERSION_NUM >= 90100
+#define numeric_cash 3824
+#else
+#define cash_in 886
+#endif
+
+PG_FUNCTION_INFO_V1(currency_money);
+Datum
+currency_money(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	int16 target_code;
+	struct tv* neutral;
+	ccc_ent* cc_from;
+#ifndef numeric_cash
+	char* outstr;
+#endif
+
+	update_currency_code_cache();
+	target_code = currency_code_cache->currency_code;
+
+	if (amount->currency_code != target_code) {
+		cc_from = lookup_currency_code(amount->currency_code);
+		neutral = OidFunctionCall2(
+			numeric_mul,
+			currency_numeric(amount),
+			PointerGetDatum(cc_from->currency_rate)
+			);
+	}
+	else {
+		neutral = currency_numeric(amount);
+	}
+
+#ifdef numeric_cash
+	PG_RETURN_POINTER( OidFunctionCall1( numeric_cash, neutral ) );
+#else
+	// else go through a C string, of course :)
+	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( neutral ) );
+	PG_RETURN_POINTER( OidFunctionCall1( cash_in, CStringGetDatum(outstr) ) );
+#endif
+}

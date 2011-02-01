@@ -33,3 +33,6 @@ select ('20'||'nzd')::currency as "20 NZD";
 -- code type, but if it's just a generic three letters, it makes no
 -- sense.
 select 20 * 'nzd'::tla as ERROR;
+
+-- casting to money : locale dependent test (FIXME)
+select currency('20', 'nzd')::money as "$60.00";
