@@ -83,6 +83,21 @@ typedef struct currency
 	var = palloc( size ); \
 	SET_VARSIZE( var, size );
 
+currency* make_currency(struct tv* numeric, int16 currency_code) {
+	currency* newval;
+
+	alloc_varlena(
+		newval,
+		VARSIZE( numeric ) + offsetof(currency, numeric) - VARHDRSZ
+		);
+	memcpy( &newval->numeric,
+		DatumGetPointer( numeric ) + VARHDRSZ,
+		VARSIZE( numeric ) - VARHDRSZ );
+	newval->currency_code = currency_code;
+
+	return newval;
+}
+
 /* handy little function for dumping chunks of memory as hex :) */
 char* dump_hex(void* ptr, int len)
 {
@@ -110,6 +125,7 @@ currency* parse_currency(char* str)
 	char code[4];
 	char fail[2] = "";
 	currency *newval;
+	int16 currency_code;
 
 	// use sscanf, so that whitespace between number and currency
 	// code can be optional.
@@ -127,21 +143,15 @@ currency* parse_currency(char* str)
 		-1  /* typmod */
 		);
 	//elog(WARNING, "numeric_in called ok, length %d, numeric_val = %s", VARSIZE(numeric_val), dump_hex(DatumGetPointer(numeric_val), VARSIZE(numeric_val)) );
-	
-	alloc_varlena(newval, VARSIZE( numeric_val ) + offsetof(currency, numeric) - VARHDRSZ );
-	memcpy( &newval->numeric,
-		DatumGetPointer( numeric_val ) + VARHDRSZ,
-		VARSIZE( numeric_val ) - VARHDRSZ );
-
-	pfree(numeric_val);
-
-	if (!(newval->currency_code = parse_tla(&code))) {
+	if (!(currency_code = parse_tla(&code))) {
 		elog(ERROR, "bad currency code '%s'", &code);
 	}
 
 	//elog(WARNING, "parse_tla called ok, currency_code = %.4x", newval->currency_code);
+	newval = make_currency(numeric_val, currency_code);
 
 	//elog(WARNING, "return struct = %s", dump_hex(newval, VARSIZE(newval)));
+	pfree(numeric_val);
 
 	return newval;
 }
@@ -474,11 +484,7 @@ currency_convert(PG_FUNCTION_ARGS)
 		//elog(WARNING, "converted to %s %s", number, emit_tla(target_code));
 	}
 
-	alloc_varlena(newval, VARSIZE( target ) + offsetof(currency, numeric) - VARHDRSZ );
-	memcpy( &newval->numeric,
-		DatumGetPointer( target ) + VARHDRSZ,
-		VARSIZE( target ) - VARHDRSZ );
-	newval->currency_code = target_code;
+	newval = make_currency(target, target_code);
 
 	pfree(target);
 	return newval;
@@ -512,18 +518,7 @@ currency_compose(PG_FUNCTION_ARGS)
 	int16 currency_code = PG_GETARG_DATUM(1);
 	currency* newval;
 
-	alloc_varlena(
-		newval,
-		VARSIZE( number ) + offsetof(currency, numeric) - VARHDRSZ
-		);
-	memcpy(
-		&newval->numeric,
-		DatumGetPointer( number ) + VARHDRSZ,
-		VARSIZE( number ) - VARHDRSZ
-		);
-	newval->currency_code = currency_code;
-
-	PG_RETURN_POINTER(newval);
+	PG_RETURN_POINTER( make_currency( number, currency_code ));
 }
 
 #if PG_VERSION_NUM >= 90100
