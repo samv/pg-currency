@@ -262,7 +262,7 @@ CREATE OR REPLACE FUNCTION money(currency)
 	AS 'currency', 'currency_money'
 	LANGUAGE C STRICT STABLE;
 
-CREATE CAST (currency AS money) WITH FUNCTION money(currency) AS IMPLICIT;
+CREATE CAST (currency AS money) WITH FUNCTION money(currency);
 
 --
 --	eof

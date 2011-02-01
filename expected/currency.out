@@ -121,3 +121,9 @@ select currency('20', 'nzd')::money as "$60.00";
  $60.00
 (1 row)
 
+-- test that there are no casts by default
+select '100 nzd'::currency = '100 nzd'::currency as t;
+ERROR:  operator does not exist: currency = currency
+LINE 1: select '100 nzd'::currency = '100 nzd'::currency as t;
+                                   ^
+HINT:  No operator matches the given name and argument type(s). You might need to add explicit type casts.
