@@ -143,6 +143,6 @@ precision, use the format() functions.
 
 Copyright and License
 ---------------------
-This contrib/ module is Copyright (c) 2010, Adioso Ltd.  This module
-is free software; you may use it under the same terms as Postgres
-itself.
+This contrib/ module is Copyright (c) 2010, 2011, Adioso Ltd.  This
+module is free software; you may use it under the same terms as
+Postgres itself.

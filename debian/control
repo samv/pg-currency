@@ -1,0 +1,15 @@
+Source: postgresql-9.0-currency
+Priority: extra
+Maintainer: Sam Vilain <samv@adioso.com>
+Build-Depends: debhelper (>= 7.0.50~), libpq-dev (>= 9), postgresql-server-dev-9.0
+Standards-Version: 3.8.4
+Section: libs
+Homepage: http://adioso.com/
+Vcs-Git: git://github.com/samv/postgresql-9.0-currency.git
+Vcs-Browser: http://github.com/samv/postgresql-9.0-currency
+
+Package: postgresql-9.0-currency
+Architecture: any
+Depends: ${shlibs:Depends}, postgresql-9.0, ${misc:Depends}
+Description: Multi-currency monetary type for Postgres
+ Add support to Postgresql 9.0 for a CURRENCY type.

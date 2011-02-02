@@ -1,0 +1,2 @@
+currency.so /usr/lib/postgresql/9.0/lib
+currency.sql uninstall_currency.sql /usr/share/postgresql/9.0/contrib
