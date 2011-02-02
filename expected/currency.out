@@ -414,3 +414,21 @@ select '60 usd'::currency + '-60 usd'::currency as "0 USD";
  0 USD
 (1 row)
 
+select '60 usd'::currency - '20 nzd'::currency as "180 BTC";
+ 180 BTC 
+---------
+ 180 BTC
+(1 row)
+
+select '60 usd'::currency - '20 usd'::currency as "40 USD";
+ 40 USD 
+--------
+ 40 USD
+(1 row)
+
+select '60 usd'::currency - '-60 usd'::currency as "120 USD";
+ 120 USD 
+---------
+ 120 USD
+(1 row)
+

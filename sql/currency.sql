@@ -107,3 +107,7 @@ select hash_currency('100 eur'::currency) = hash_currency('100.00 eur'::currency
 select '60 usd'::currency + '20 nzd'::currency as "300 BTC";
 select '60 usd'::currency + '20 usd'::currency as "80 USD";
 select '60 usd'::currency + '-60 usd'::currency as "0 USD";
+
+select '60 usd'::currency - '20 nzd'::currency as "180 BTC";
+select '60 usd'::currency - '20 usd'::currency as "40 USD";
+select '60 usd'::currency - '-60 usd'::currency as "120 USD";

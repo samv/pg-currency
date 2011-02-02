@@ -378,6 +378,17 @@ CREATE OPERATOR + (
 	procedure = "(+)"
 );
 
+CREATE OR REPLACE FUNCTION "(-)"(currency, currency)
+	RETURNS currency
+	AS 'currency', 'currency_sub'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OPERATOR - (
+	leftarg = currency,
+	rightarg = currency,
+	procedure = "(-)"
+);
+
 --
 --	eof
 --

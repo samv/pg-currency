@@ -692,43 +692,72 @@ currency_hash(PG_FUNCTION_ARGS)
 	PG_RETURN_INT32(numeric_hash);
 }
 
+currency* currency_math2(int operator, currency *arg1, currency* arg2)
+{
+	int16 currency_code;
+	struct tv *arg1_num, *arg2_num;
+	struct tv *result_num;
+	currency *result;
+
+	if (arg1->currency_code != arg2->currency_code) {
+		currency_code = currency_code_cache[0].currency_code;
+		arg1_num = currency_neutral(arg1);
+		arg2_num = currency_neutral(arg2);
+	}
+	else {
+		currency_code = arg1->currency_code;
+		arg1_num = currency_numeric(arg1);
+		arg2_num = currency_numeric(arg2);
+	}
+
+	result_num = OidFunctionCall2(
+		operator,
+		PointerGetDatum(arg1_num), PointerGetDatum(arg2_num)
+		);
+
+	pfree(arg1_num);
+	pfree(arg2_num);
+
+	result = make_currency(result_num, currency_code);
+	pfree(result_num);
+	return result;
+}
+
 PG_FUNCTION_INFO_V1(currency_add);
 Datum
 currency_add(PG_FUNCTION_ARGS)
 {
 	currency* augend = (void*)PG_GETARG_POINTER(0);
 	currency* addend = (void*)PG_GETARG_POINTER(1);
-	currency* sum;
-	int16 currency_code;
 
-	struct tv *augend_num, *addend_num;
-	struct tv *sum_num;
+	currency* sum;
 
 	update_currency_code_cache();
 
-	if (augend->currency_code != addend->currency_code) {
-		currency_code = currency_code_cache[0].currency_code;
-		augend_num = currency_neutral(augend);
-		addend_num = currency_neutral(addend);
-	}
-	else {
-		currency_code = augend->currency_code;
-		augend_num = currency_numeric(augend);
-		addend_num = currency_numeric(addend);
-	}
+	sum = currency_math2(numeric_add, augend, addend);
 
 	PG_FREE_IF_COPY(augend, 0);
 	PG_FREE_IF_COPY(addend, 1);
 
-	sum_num = OidFunctionCall2(
-		numeric_add,
-		PointerGetDatum(augend_num), PointerGetDatum(addend_num)
-		);
-	pfree(augend_num);
-	pfree(addend_num);
-
-	sum = make_currency(sum_num, currency_code);
-	pfree(sum_num);
-
 	PG_RETURN_POINTER(sum);
 }
+
+PG_FUNCTION_INFO_V1(currency_sub);
+Datum
+currency_sub(PG_FUNCTION_ARGS)
+{
+	currency* minuend = (void*)PG_GETARG_POINTER(0);
+	currency* subtrahend = (void*)PG_GETARG_POINTER(1);
+
+	currency* difference;
+
+	update_currency_code_cache();
+
+	difference = currency_math2(numeric_sub, minuend, subtrahend);
+
+	PG_FREE_IF_COPY(minuend, 0);
+	PG_FREE_IF_COPY(subtrahend, 1);
+
+	PG_RETURN_POINTER(difference);
+}
+
