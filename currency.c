@@ -174,7 +174,7 @@ currency* parse_currency(char* str)
 	return newval;
 }
 
-struct varlena* currency_numeric(currency* amount) {
+struct varlena* _currency_numeric(currency* amount) {
 	struct varlena* tv;
 
 	alloc_varlena(
@@ -196,7 +196,7 @@ char* emit_currency(currency* amount) {
 
 	/* construct a varlena structure so we can call the
 	 * numeric_out function and have a happy life */
-	struct varlena* tv = currency_numeric(amount);
+	struct varlena* tv = _currency_numeric(amount);
 
 	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( tv ) );
 
@@ -409,7 +409,7 @@ currency_format(PG_FUNCTION_ARGS)
 		elog(ERROR, "currency code '%s' not in currency_rate table",
 		     emit_tla( amount->currency_code ));
 
-	numeric = currency_numeric(amount);
+	numeric = _currency_numeric(amount);
 	rounded = OidFunctionCall2(
 		numeric_round_scale, PointerGetDatum( numeric ),
 		info->currency_minor
@@ -437,7 +437,7 @@ currency_format(PG_FUNCTION_ARGS)
 
 /* convert a currency to a neutral NUMERIC value */
 struct varlena* currency_neutral(currency* amount) {
-	struct varlena* amount_num = currency_numeric(amount);
+	struct varlena* amount_num = _currency_numeric(amount);
 	struct varlena* neutral;
 	ccc_ent* cc_info;
 
@@ -452,7 +452,7 @@ struct varlena* currency_neutral(currency* amount) {
 	else {
 		neutral = OidFunctionCall2(
 			numeric_mul,
-			currency_numeric(amount),
+			_currency_numeric(amount),
 			PointerGetDatum(cc_info->currency_rate)
 			);
 		pfree(amount_num);
@@ -516,7 +516,7 @@ currency_value(PG_FUNCTION_ARGS)
 {
 	currency* amount = (void*)PG_GETARG_POINTER(0);
 
-	PG_RETURN_POINTER(currency_numeric(amount));
+	PG_RETURN_POINTER(_currency_numeric(amount));
 }
 
 PG_FUNCTION_INFO_V1(currency_compose);
@@ -568,8 +568,8 @@ int currency_cmp(currency* a, currency* b)
 	int rv;
 	struct tv *a_n, *b_n;
 	if (a->currency_code == b->currency_code) {
-		a_n = currency_numeric(a);
-		b_n = currency_numeric(b);
+		a_n = _currency_numeric(a);
+		b_n = _currency_numeric(b);
 	}
 	else {
 		a_n = currency_neutral(a);
@@ -707,8 +707,8 @@ currency* currency_math2(int operator, currency *arg1, currency* arg2)
 	}
 	else {
 		currency_code = arg1->currency_code;
-		arg1_num = currency_numeric(arg1);
-		arg2_num = currency_numeric(arg2);
+		arg1_num = _currency_numeric(arg1);
+		arg2_num = _currency_numeric(arg2);
 	}
 
 	result_num = OidFunctionCall2(
@@ -773,7 +773,7 @@ currency_mul(PG_FUNCTION_ARGS)
 	struct tv *amount_num, *product_num;
 	currency* product;
 
-	amount_num = currency_numeric(amount);
+	amount_num = _currency_numeric(amount);
 	product_num = OidFunctionCall2(
 		numeric_mul,
 		PointerGetDatum(amount_num),
@@ -804,7 +804,7 @@ currency_div(PG_FUNCTION_ARGS)
 
 	if (return_currency) {
 		// dividing a currency by a numeric
-		dividend_num = currency_numeric(dividend);
+		dividend_num = _currency_numeric(dividend);
 		divisor_num = (void*)PG_GETARG_POINTER(1);
 	}
 	else {
@@ -816,8 +816,8 @@ currency_div(PG_FUNCTION_ARGS)
 			divisor_num = currency_neutral(divisor);
 		}
 		else {
-			dividend_num = currency_numeric(dividend);
-			divisor_num = currency_numeric(divisor);
+			dividend_num = _currency_numeric(dividend);
+			divisor_num = _currency_numeric(divisor);
 		}
 	}
 
@@ -851,7 +851,7 @@ Datum
 currency_uplus(PG_FUNCTION_ARGS)
 {
 	currency* amount = (void*)PG_GETARG_POINTER(0);
-	struct tv* num = currency_numeric(amount);
+	struct tv* num = _currency_numeric(amount);
 	currency* copy = make_currency(num, amount->currency_code);
 
 	PG_FREE_IF_COPY(amount, 0);
@@ -865,7 +865,7 @@ Datum
 currency_uminus(PG_FUNCTION_ARGS)
 {
 	currency* amount = (void*)PG_GETARG_POINTER(0);
-	struct tv* num = currency_numeric(amount);
+	struct tv* num = _currency_numeric(amount);
 	struct tv* negnum = OidFunctionCall1( numeric_uminus, num );
 	currency* neg = make_currency(negnum, amount->currency_code);
 
