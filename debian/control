@@ -5,11 +5,13 @@ Build-Depends: debhelper (>= 7.0.50~), libpq-dev (>= 9), postgresql-server-dev-9
 Standards-Version: 3.8.4
 Section: libs
 Homepage: http://adioso.com/
-Vcs-Git: git://github.com/samv/postgresql-9.0-currency.git
-Vcs-Browser: http://github.com/samv/postgresql-9.0-currency
+Vcs-Git: git://github.com/samv/pg-currency.git
+Vcs-Browser: http://github.com/samv/pg-currency
 
 Package: postgresql-9.0-currency
 Architecture: any
 Depends: ${shlibs:Depends}, postgresql-9.0, ${misc:Depends}
-Description: Multi-currency monetary type for Postgres
- Add support to Postgresql 9.0 for a CURRENCY type.
+Description: Arbitrary precision, multi-currency monetary type for Postgres
+ Add support to Postgresql 9.0 for a CURRENCY type, which is a
+ thin wrapper for NUMERIC plus some extra features useful for
+ working with databases containing values in multiple currencies.

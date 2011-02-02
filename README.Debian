@@ -1,0 +1,32 @@
+Quick start for Debian/Ubuntu Users
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you got this package from the 'git clone', first, make sure that
+your system is capable of building postgres extension packages:
+
+  apt-get install build-essential libpq-dev postgresql-server-dev-9.0
+
+Then build using dpkg-buildpackage;
+
+  dpkg-buildpackage -b -uc -rfakeroot
+
+This will build a binary package file, which you can install using:
+
+  sudo dpkg -i ../postgresql-9.0-currency_*_*.deb
+
+Once you have the package installed, install using the standard method
+documented in the Postgres User Manual; slightly modified here for
+ease of cut and paste:
+
+  SHAREDIR=$(pg_config --sharedir)
+  sudo -u postgres psql -d dbname -f $SHAREDIR/contrib/currency.sql
+
+Where 'dbname' is the database that you want to use the currency type
+from.  If you install on a different machine to the one you build
+from, set SHAREDIR=/usr/share/postgresql/9.0
+
+For a summary of the currenty supported operations, refer to:
+
+  zless /usr/share/doc/postgresql-9.0-currency/README.gz
+
+Enjoy,
+Sam Vilain, on behalf of Adioso Inc.

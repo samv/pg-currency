@@ -1,7 +1,7 @@
 README for currency contrib module
 ----------------------------------
 
-This postgres module implements a fast, fixed point multi-currency
+This postgres module implements an arbitrary precision, multi-currency
 money type.
 
 * support for up to 999 currencies in a currency lookup table
