@@ -450,3 +450,22 @@ select 21 * '61 usd'::currency as "1281 USD";
  1281 USD
 (1 row)
 
+-- division
+select round('60 usd'::currency / '20 usd'::currency, 7) as "3.0000000";
+ 3.0000000 
+-----------
+ 3.0000000
+(1 row)
+
+select #('60 usd'::currency / 20) as "USD 3.00";
+ USD 3.00 
+----------
+ USD 3.00
+(1 row)
+
+select round('60 usd'::currency / '20 nzd'::currency, 7) as "4.0000000";
+ 4.0000000 
+-----------
+ 4.0000000
+(1 row)
+

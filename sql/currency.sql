@@ -116,3 +116,8 @@ select '60 usd'::currency - '-60 usd'::currency as "120 USD";
 select '60 usd'::currency * '20 nzd'::currency as ERROR;
 select '60 usd'::currency * 20 as "1200 USD";
 select 21 * '61 usd'::currency as "1281 USD";
+
+-- division
+select round('60 usd'::currency / '20 usd'::currency, 7) as "3.0000000";
+select #('60 usd'::currency / 20) as "USD 3.00";
+select round('60 usd'::currency / '20 nzd'::currency, 7) as "4.0000000";

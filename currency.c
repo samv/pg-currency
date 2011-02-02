@@ -790,3 +790,58 @@ currency_mul(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(product);
 }
 
+PG_FUNCTION_INFO_V1(currency_div);
+Datum
+currency_div(PG_FUNCTION_ARGS)
+{
+	bool return_currency =
+		get_fn_expr_argtype(fcinfo->flinfo, 1) == numeric_oid;
+
+	currency* dividend = (void*)PG_GETARG_POINTER( 0 );
+	currency *divisor, *quotient;
+	struct tv *dividend_num, *divisor_num, *quotient_num;
+
+	if (return_currency) {
+		// dividing a currency by a numeric
+		dividend_num = currency_numeric(dividend);
+		divisor_num = (void*)PG_GETARG_POINTER(1);
+	}
+	else {
+		// dividing two currencies
+		divisor = (void*)PG_GETARG_POINTER(1);
+		if (dividend->currency_code != divisor->currency_code) {
+			update_currency_code_cache();
+			dividend_num = currency_neutral(dividend);
+			divisor_num = currency_neutral(divisor);
+		}
+		else {
+			dividend_num = currency_numeric(dividend);
+			divisor_num = currency_numeric(divisor);
+		}
+	}
+
+	quotient_num = OidFunctionCall2(
+		numeric_div,
+		PointerGetDatum(dividend_num),
+		PointerGetDatum(divisor_num)
+		);
+
+	PG_FREE_IF_COPY(dividend, 0);
+	pfree(dividend_num);
+
+	if (return_currency) {
+		quotient = make_currency(
+			quotient_num,
+			dividend->currency_code
+			);
+		PG_FREE_IF_COPY(divisor_num, 1);
+		pfree(quotient_num);
+		PG_RETURN_POINTER(quotient);
+	}
+	else {
+		pfree(divisor_num);
+		PG_FREE_IF_COPY(divisor, 1);
+		PG_RETURN_POINTER(quotient_num);
+	}
+}
+

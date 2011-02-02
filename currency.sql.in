@@ -413,6 +413,28 @@ CREATE OPERATOR * (
 	procedure = "(*)"
 );
 
+CREATE OR REPLACE FUNCTION "(/)"(currency, numeric)
+	RETURNS currency
+	AS 'currency', 'currency_div'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "(/)"(currency, currency)
+	RETURNS numeric
+	AS 'currency', 'currency_div'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OPERATOR / (
+	leftarg = currency,
+	rightarg = currency,
+	procedure = "(/)"
+);
+
+CREATE OPERATOR / (
+	leftarg = currency,
+	rightarg = numeric,
+	procedure = "(/)"
+);
+
 --
 --	eof
 --
