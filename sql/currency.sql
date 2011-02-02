@@ -111,3 +111,8 @@ select '60 usd'::currency + '-60 usd'::currency as "0 USD";
 select '60 usd'::currency - '20 nzd'::currency as "180 BTC";
 select '60 usd'::currency - '20 usd'::currency as "40 USD";
 select '60 usd'::currency - '-60 usd'::currency as "120 USD";
+
+-- multiplication
+select '60 usd'::currency * '20 nzd'::currency as ERROR;
+select '60 usd'::currency * 20 as "1200 USD";
+select 21 * '61 usd'::currency as "1281 USD";

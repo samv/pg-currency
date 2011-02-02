@@ -432,3 +432,21 @@ select '60 usd'::currency - '-60 usd'::currency as "120 USD";
  120 USD
 (1 row)
 
+-- multiplication
+select '60 usd'::currency * '20 nzd'::currency as ERROR;
+ERROR:  operator does not exist: currency * currency
+LINE 1: select '60 usd'::currency * '20 nzd'::currency as ERROR;
+                                  ^
+HINT:  No operator matches the given name and argument type(s). You might need to add explicit type casts.
+select '60 usd'::currency * 20 as "1200 USD";
+ 1200 USD 
+----------
+ 1200 USD
+(1 row)
+
+select 21 * '61 usd'::currency as "1281 USD";
+ 1281 USD 
+----------
+ 1281 USD
+(1 row)
+

@@ -389,6 +389,30 @@ CREATE OPERATOR - (
 	procedure = "(-)"
 );
 
+CREATE OR REPLACE FUNCTION "(*)"(currency, numeric)
+	RETURNS currency
+	AS 'currency', 'currency_mul'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION "(*)"(numeric, currency)
+	RETURNS currency
+	AS 'currency', 'currency_mul'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OPERATOR * (
+	leftarg = currency,
+	rightarg = numeric,
+	commutator = *,
+	procedure = "(*)"
+);
+
+CREATE OPERATOR * (
+	leftarg = numeric,
+	rightarg = currency,
+	commutator = *,
+	procedure = "(*)"
+);
+
 --
 --	eof
 --

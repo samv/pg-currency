@@ -761,3 +761,32 @@ currency_sub(PG_FUNCTION_ARGS)
 	PG_RETURN_POINTER(difference);
 }
 
+PG_FUNCTION_INFO_V1(currency_mul);
+Datum
+currency_mul(PG_FUNCTION_ARGS)
+{
+	bool num_first = get_fn_expr_argtype(fcinfo->flinfo, 0) == numeric_oid;
+
+	currency* amount = (void*)PG_GETARG_POINTER( num_first ? 1 : 0 );
+	struct tv* factor = (void*)PG_GETARG_POINTER( num_first ? 0 : 1 );
+	struct tv *amount_num, *product_num;
+	currency* product;
+
+	amount_num = currency_numeric(amount);
+	product_num = OidFunctionCall2(
+		numeric_mul,
+		PointerGetDatum(amount_num),
+		PointerGetDatum(factor)
+		);
+
+	product = make_currency( product_num, amount->currency_code );
+
+	pfree(amount_num);
+	pfree(product_num);
+
+	PG_FREE_IF_COPY(amount, num_first ? 1 : 0);
+	PG_FREE_IF_COPY(factor, num_first ? 0 : 1);
+
+	PG_RETURN_POINTER(product);
+}
+
