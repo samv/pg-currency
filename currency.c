@@ -55,6 +55,11 @@ Datum		currency_gt(PG_FUNCTION_ARGS);
 //Datum		currency_in_money(PG_FUNCTION_ARGS);
 //Datum		currency_out_money(PG_FUNCTION_ARGS);
 
+static MemoryContext CurrencyCacheContext = NULL;
+
+static void *cc_palloc(size_t size);
+static char *cc_pstrdup(const char *string);
+
 #define numeric_oid 1700
 #define numeric_in 1701
 #define numeric_out 1702
@@ -82,6 +87,19 @@ typedef struct currency
 #define alloc_varlena( var, size ) \
 	var = palloc( size ); \
 	SET_VARSIZE( var, size );
+
+static void *
+cc_palloc(size_t size)
+{
+	return MemoryContextAlloc(CurrencyCacheContext, size);
+}
+
+
+static char *
+cc_pstrdup(const char *string)
+{
+	return MemoryContextStrdup(CurrencyCacheContext, string);
+}
 
 currency* make_currency(struct tv* numeric, int16 currency_code) {
 	currency* newval;
@@ -254,6 +272,7 @@ int _update_cc_cache() {
 	Oid typoutput_sym;
 	bool junk, isnull;
 	char* outputstr;
+	struct tv *numeric;
 
 	if (SPI_connect() == SPI_ERROR_CONNECT) {
 		elog(ERROR, "failed to connect to SPI");
@@ -272,17 +291,21 @@ int _update_cc_cache() {
 		return 0;
 	}
 
-	if (currency_code_cache && ccc_size != SPI_processed) {
-		pfree(currency_code_cache);
-		currency_code_cache = 0;
-	}
-	if (!currency_code_cache) {
-		currency_code_cache = MemoryContextAlloc(
-			CurTransactionContext,
-			sizeof(ccc_ent) * SPI_processed
+	if (CurrencyCacheContext == NULL) {
+		CurrencyCacheContext = AllocSetContextCreate(
+			TopMemoryContext,
+			"CurrencyCacheContext",
+			ALLOCSET_DEFAULT_MINSIZE,
+			ALLOCSET_DEFAULT_INITSIZE,
+			ALLOCSET_DEFAULT_MAXSIZE
 			);
-		ccc_size = SPI_processed;
 	}
+	else {
+		MemoryContextReset(CurrencyCacheContext);
+	}
+
+	currency_code_cache = cc_palloc(sizeof(ccc_ent) * SPI_processed);
+	ccc_size = SPI_processed;
 
 	/* results are in SPI_tuptable */
 	tupdesc = SPI_tuptable->tupdesc;
@@ -308,19 +331,17 @@ int _update_cc_cache() {
 		}
 		else {
 			outputstr = OidOutputFunctionCall(typoutput_sym, attr);
-			currency_code_cache[i].currency_symbol = MemoryContextAlloc(
-				CurTransactionContext,
-				strlen(outputstr) + 1
-				);
-			/* fixme ... alloc new */
-			currency_code_cache[i].currency_symbol = outputstr;
+			currency_code_cache[i].currency_symbol = cc_pstrdup(outputstr);
 		}
 		
 		/* rate */
 		attr = heap_getattr(tuple, 3, tupdesc, &isnull);
-		currency_code_cache[i].currency_rate = OidFunctionCall1(
-			numeric_uplus, attr
-			);
+		/* this seems to help */
+		numeric = OidFunctionCall1( numeric_uplus, attr );
+		currency_code_cache[i].currency_rate = cc_palloc( VARSIZE(numeric) );
+		memcpy(currency_code_cache[i].currency_rate,
+		       numeric,
+		       VARSIZE(numeric));
 
 		/* is_exchange */
 		attr = heap_getattr(tuple, 5, tupdesc, &isnull);
