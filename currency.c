@@ -251,7 +251,7 @@ int _update_cc_cache() {
 	HeapTuple tuple;
 	TupleDesc tupdesc;
 	Datum attr;
-	Oid typoutput_sym, typoutput_rate;
+	Oid typoutput_sym;
 	bool junk, isnull;
 	char* outputstr;
 
@@ -286,10 +286,6 @@ int _update_cc_cache() {
 
 	/* results are in SPI_tuptable */
 	tupdesc = SPI_tuptable->tupdesc;
-	getTypeOutputInfo(
-		tupdesc->attrs[2]->atttypid,
-		&typoutput_rate, &junk
-		);
 	getTypeOutputInfo(
 		tupdesc->attrs[3]->atttypid,
 		&typoutput_sym, &junk
