@@ -264,6 +264,13 @@ CREATE OR REPLACE FUNCTION money(currency)
 
 CREATE CAST (currency AS money) WITH FUNCTION money(currency);
 
+CREATE OR REPLACE FUNCTION currency_numeric(currency)
+	RETURNS numeric
+	AS 'currency', 'currency_numeric'
+	LANGUAGE C STRICT STABLE;
+
+CREATE CAST (currency AS numeric) WITH FUNCTION currency_numeric(currency);
+
 CREATE OR REPLACE FUNCTION eq(currency, currency)
 	RETURNS boolean
 	AS 'currency', 'currency_eq'

@@ -561,6 +561,29 @@ currency_money(PG_FUNCTION_ARGS)
 #endif
 }
 
+PG_FUNCTION_INFO_V1(currency_numeric);
+Datum
+currency_numeric(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	int16 target_code;
+	struct tv *neutral, *rounded;
+	ccc_ent* neutral_info;
+
+	update_currency_code_cache();
+	neutral_info = currency_code_cache;
+
+	neutral = currency_neutral(amount);
+	rounded = OidFunctionCall2(
+		numeric_round_scale, PointerGetDatum( neutral ),
+		neutral_info->currency_minor
+		);
+	pfree(neutral);
+	PG_FREE_IF_COPY(amount, 0);
+
+	PG_RETURN_POINTER( rounded );
+}
+
 /* a <=>-style compare function; caller is expected to have called
  * update_currency_code_cache() */
 int currency_cmp(currency* a, currency* b)

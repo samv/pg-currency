@@ -36,6 +36,7 @@ select 20 * 'nzd'::tla as ERROR;
 
 -- casting to money : locale dependent test (FIXME)
 select currency('20', 'nzd')::money as "$60.00";
+select currency('20', 'nzd')::numeric as "60.00";
 
 -- test comparisons
 select '100 nzd'::currency = '100 nzd'::currency as t;

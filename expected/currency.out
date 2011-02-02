@@ -121,6 +121,12 @@ select currency('20', 'nzd')::money as "$60.00";
  $60.00
 (1 row)
 
+select currency('20', 'nzd')::numeric as "60.00";
+ 60.00 
+-------
+ 60.00
+(1 row)
+
 -- test comparisons
 select '100 nzd'::currency = '100 nzd'::currency as t;
  t 
