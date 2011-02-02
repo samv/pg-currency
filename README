@@ -116,6 +116,9 @@ Other math on currency units:
     '100EUR'::currency + 10                => type error
     '100EUR'::currency * '10EUR'::currency => type error
 
+    -'100EUR'::currency        = '-100 EUR'::currency
+    +'100EUR'::currency        = '100 EUR'::currency
+
 
 Indexing
 --------

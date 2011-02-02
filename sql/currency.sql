@@ -121,3 +121,10 @@ select 21 * '61 usd'::currency as "1281 USD";
 select round('60 usd'::currency / '20 usd'::currency, 7) as "3.0000000";
 select #('60 usd'::currency / 20) as "USD 3.00";
 select round('60 usd'::currency / '20 nzd'::currency, 7) as "4.0000000";
+
+-- unary functions
+select -'60 usd'::currency as "-60 USD";
+select +'60 usd'::currency as "60 USD";
+
+select '20 usd'::currency + -'60 usd'::currency as "-40 USD";
+select '20 usd'::currency + +'60 usd'::currency as "80 USD";

@@ -76,6 +76,7 @@ static char *cc_pstrdup(const char *string);
 #define numeric_div 1727
 #define numeric_cmp 1769
 #define numeric_uplus 1915
+#define numeric_uminus 1771
 #define hash_numeric 432
 #define hashint2 449
 
@@ -845,3 +846,32 @@ currency_div(PG_FUNCTION_ARGS)
 	}
 }
 
+PG_FUNCTION_INFO_V1(currency_uplus);
+Datum
+currency_uplus(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	struct tv* num = currency_numeric(amount);
+	currency* copy = make_currency(num, amount->currency_code);
+
+	PG_FREE_IF_COPY(amount, 0);
+	pfree(num);
+
+	PG_RETURN_POINTER(copy);
+}
+
+PG_FUNCTION_INFO_V1(currency_uminus);
+Datum
+currency_uminus(PG_FUNCTION_ARGS)
+{
+	currency* amount = (void*)PG_GETARG_POINTER(0);
+	struct tv* num = currency_numeric(amount);
+	struct tv* negnum = OidFunctionCall1( numeric_uminus, num );
+	currency* neg = make_currency(negnum, amount->currency_code);
+
+	PG_FREE_IF_COPY(amount, 0);
+	pfree(num);
+	pfree(negnum);
+
+	PG_RETURN_POINTER(neg);
+}

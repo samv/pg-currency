@@ -435,6 +435,27 @@ CREATE OPERATOR / (
 	procedure = "(/)"
 );
 
+CREATE OR REPLACE FUNCTION "(-)"(currency)
+	RETURNS currency
+	AS 'currency', 'currency_uminus'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OPERATOR - (
+	rightarg = currency,
+	procedure = "(-)"
+);
+
+CREATE OR REPLACE FUNCTION "(+)"(currency)
+	RETURNS currency
+	AS 'currency', 'currency_uplus'
+	LANGUAGE C STRICT IMMUTABLE;
+
+CREATE OPERATOR + (
+	rightarg = currency,
+	procedure = "(+)"
+);
+
+
 --
 --	eof
 --
