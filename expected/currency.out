@@ -395,3 +395,22 @@ select hash_currency('100 eur'::currency) = hash_currency('100.00 eur'::currency
  t
 (1 row)
 
+-- addition of currency units
+select '60 usd'::currency + '20 nzd'::currency as "300 BTC";
+ 300 BTC 
+---------
+ 300 BTC
+(1 row)
+
+select '60 usd'::currency + '20 usd'::currency as "80 USD";
+ 80 USD 
+--------
+ 80 USD
+(1 row)
+
+select '60 usd'::currency + '-60 usd'::currency as "0 USD";
+ 0 USD 
+-------
+ 0 USD
+(1 row)
+

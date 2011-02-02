@@ -102,3 +102,8 @@ select hash_currency('100 eur'::currency) != hash_currency('101 eur'::currency) 
 select hash_currency('100 eur'::currency) != hash_currency('100 nzd'::currency) as t;
 select hash_currency('40 eur'::currency) = hash_currency('60 usd'::currency) as t;
 select hash_currency('100 eur'::currency) = hash_currency('100.00 eur'::currency) as t;
+
+-- addition of currency units
+select '60 usd'::currency + '20 nzd'::currency as "300 BTC";
+select '60 usd'::currency + '20 usd'::currency as "80 USD";
+select '60 usd'::currency + '-60 usd'::currency as "0 USD";

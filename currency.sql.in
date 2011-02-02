@@ -366,6 +366,18 @@ DEFAULT FOR TYPE currency USING btree AS
     OPERATOR    5   >  (currency, currency),
     FUNCTION    1   btcmp_currency(currency, currency);
 
+CREATE OR REPLACE FUNCTION "(+)"(currency, currency)
+	RETURNS currency
+	AS 'currency', 'currency_add'
+	LANGUAGE C STRICT STABLE;
+
+CREATE OPERATOR + (
+	leftarg = currency,
+	rightarg = currency,
+	commutator = +,
+	procedure = "(+)"
+);
+
 --
 --	eof
 --

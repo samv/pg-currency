@@ -691,3 +691,44 @@ currency_hash(PG_FUNCTION_ARGS)
 
 	PG_RETURN_INT32(numeric_hash);
 }
+
+PG_FUNCTION_INFO_V1(currency_add);
+Datum
+currency_add(PG_FUNCTION_ARGS)
+{
+	currency* augend = (void*)PG_GETARG_POINTER(0);
+	currency* addend = (void*)PG_GETARG_POINTER(1);
+	currency* sum;
+	int16 currency_code;
+
+	struct tv *augend_num, *addend_num;
+	struct tv *sum_num;
+
+	update_currency_code_cache();
+
+	if (augend->currency_code != addend->currency_code) {
+		currency_code = currency_code_cache[0].currency_code;
+		augend_num = currency_neutral(augend);
+		addend_num = currency_neutral(addend);
+	}
+	else {
+		currency_code = augend->currency_code;
+		augend_num = currency_numeric(augend);
+		addend_num = currency_numeric(addend);
+	}
+
+	PG_FREE_IF_COPY(augend, 0);
+	PG_FREE_IF_COPY(addend, 1);
+
+	sum_num = OidFunctionCall2(
+		numeric_add,
+		PointerGetDatum(augend_num), PointerGetDatum(addend_num)
+		);
+	pfree(augend_num);
+	pfree(addend_num);
+
+	sum = make_currency(sum_num, currency_code);
+	pfree(sum_num);
+
+	PG_RETURN_POINTER(sum);
+}
