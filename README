@@ -99,8 +99,6 @@ the same currency type.
     '100EUR'::currency > '100GBP'::currency
     ... ORDER BY my_currency_column;
 
-[below this line TODO]
-
 Addition of units (assuming BTC as the 'exchange' currency, exchanging
 at 4 BTC = 1 USD is used a neutral currency):
 
@@ -108,11 +106,12 @@ at 4 BTC = 1 USD is used a neutral currency):
 
 Other math on currency units:
 
+    '100EUR'::currency - '10EUR'::currency =  '90 EUR'::currency
     '100EUR'::currency / 7     =  '14.28 EUR'::currency
     '14.28EUR'::currency * 7   =  '99.96 EUR'::currency
     '100EUR'::currency / 7 * 7 = '100.00 EUR'::currency (see below)
 
-    '100EUR'::currency / '10EUR' = 10::real
+    '100EUR'::currency / '10EUR' = 10::numeric
 
     '100EUR'::currency + 10                => type error
     '100EUR'::currency * '10EUR'::currency => type error
