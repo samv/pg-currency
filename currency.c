@@ -133,7 +133,6 @@ currency* parse_currency(char* str)
 		elog(ERROR, "bad currency value '%s'", str);
 	}
 	code[3] = '\0';
-	//elog(WARNING, "number = %s, code = %s", number, (char*)&code);
 
 	// use numeric_in to parse the numeric
 	numeric_val = OidFunctionCall3(
@@ -142,15 +141,12 @@ currency* parse_currency(char* str)
 		numeric,
 		-1  /* typmod */
 		);
-	//elog(WARNING, "numeric_in called ok, length %d, numeric_val = %s", VARSIZE(numeric_val), dump_hex(DatumGetPointer(numeric_val), VARSIZE(numeric_val)) );
 	if (!(currency_code = parse_tla(&code))) {
 		elog(ERROR, "bad currency code '%s'", &code);
 	}
 
-	//elog(WARNING, "parse_tla called ok, currency_code = %.4x", newval->currency_code);
 	newval = make_currency(numeric_val, currency_code);
 
-	//elog(WARNING, "return struct = %s", dump_hex(newval, VARSIZE(newval)));
 	pfree(numeric_val);
 
 	return newval;
@@ -181,7 +177,6 @@ char* emit_currency(currency* amount) {
 	struct varlena* tv = currency_numeric(amount);
 
 	outstr = OidFunctionCall1( numeric_out, PointerGetDatum( tv ) );
-	//elog(WARNING, "emit_currency: outstr = %s", outstr);
 
 	pfree(tv);
 
@@ -193,7 +188,6 @@ char* emit_currency(currency* amount) {
 	emit_tla_buf( amount->currency_code, c );
 	c += 3;
 	c = '\0';
-	//elog(WARNING, "emit_currency: res = %s", res);
 
 	return res;
 }
@@ -209,11 +203,9 @@ Datum
 currency_in_cstring(PG_FUNCTION_ARGS)
 {
 	char *str = PG_GETARG_CSTRING(0);
-	//elog(WARNING, "currency_in_cstring: parsing '%s'", str);
 	currency *result = parse_currency(str);
 	if (!result)
 		PG_RETURN_NULL();
-	//elog(WARNING, "currency_in_cstring: ok, returning '%x'", result);
 
 	PG_RETURN_POINTER(result);
 }/* output function: C string */
@@ -224,7 +216,6 @@ currency_out_cstring(PG_FUNCTION_ARGS)
 {
 	currency* amount = (void*)PG_GETARG_POINTER(0);
 	char *result;
-	//elog(WARNING, "currency_out_cstring: emitting (%x) '%s'", amount, dump_hex(amount, VARSIZE(amount)));
 	result = emit_currency(amount);
 
 	PG_RETURN_CSTRING(result);
@@ -304,25 +295,20 @@ int _update_cc_cache() {
 		&typoutput_sym, &junk
 		);
 
-	//elog(WARNING, "currency table has %d currencies", SPI_processed);
-	
 	for (i = 0; i < SPI_processed; i++) {
 		/* currency_code */
 		tuple = SPI_tuptable->vals[i];
 		attr = heap_getattr(tuple, 1, tupdesc, &isnull);
 		currency_code_cache[i].currency_code = attr;
-		//elog(WARNING, "processing currency_code = %.4x (%s)", attr, emit_tla(attr));
 
 		/* minor */
 		attr = heap_getattr(tuple, 2, tupdesc, &isnull);
 		currency_code_cache[i].currency_minor = attr;
-		//elog(WARNING, "currency_minor = %d", attr);
 
 		/* symbol */
 		attr = heap_getattr(tuple, 4, tupdesc, &isnull);
 		if (isnull) {
 			currency_code_cache[i].currency_symbol = 0;
-			//elog(WARNING, "currency_symbol = NULL");
 		}
 		else {
 			outputstr = OidOutputFunctionCall(typoutput_sym, attr);
@@ -332,19 +318,13 @@ int _update_cc_cache() {
 				);
 			/* fixme ... alloc new */
 			currency_code_cache[i].currency_symbol = outputstr;
-			//elog(WARNING, "currency_symbol = %s", outputstr);
 		}
 		
 		/* rate */
 		attr = heap_getattr(tuple, 3, tupdesc, &isnull);
-		//outputstr = OidOutputFunctionCall(typoutput_rate, attr);
 		currency_code_cache[i].currency_rate = OidFunctionCall1(
 			numeric_uplus, attr
 			);
-		outputstr = OidFunctionCall1(
-			numeric_out, currency_code_cache[i].currency_rate
-			);
-		//elog(WARNING, "currency_rate = %s", outputstr);
 
 		/* is_exchange */
 		attr = heap_getattr(tuple, 5, tupdesc, &isnull);
@@ -356,11 +336,9 @@ int _update_cc_cache() {
 		}
 
 	}
-	 //elog(WARNING, "finished iterating");
 
 	SPI_finish();
 
-	//elog(WARNING, "SPI finished");
 	ccc_cmdid = GetCurrentCommandId(false);
 	ccc_txid = GetCurrentTransactionId();
 	return ccc_size;
@@ -473,7 +451,6 @@ currency_convert(PG_FUNCTION_ARGS)
 	struct varlena* target;
 	ccc_ent *cc_to;
 	currency* newval;
-	char* number;
 
 	update_currency_code_cache();
 	neutral = currency_neutral(amount);
@@ -482,11 +459,6 @@ currency_convert(PG_FUNCTION_ARGS)
 	if (!cc_to)
 		elog(ERROR, "currency code '%s' not in currency_rate table",
 		     emit_tla( target_code ));
-
-	number = OidFunctionCall1( numeric_out, currency_numeric( amount ) );
-	//elog(WARNING, "converting %s %s to %s", number, emit_tla(cc_from->currency_code), emit_tla(cc_to->currency_code));
-	number = OidFunctionCall1( numeric_out, PointerGetDatum( neutral ) );
-	//elog(WARNING, "converted to '%s' neutral", number);
 
 	if (cc_to == currency_code_cache) {
 		target = neutral;
@@ -498,7 +470,6 @@ currency_convert(PG_FUNCTION_ARGS)
 			PointerGetDatum(cc_to->currency_rate)
 			);
 		pfree(neutral);
-		//elog(WARNING, "converted to %s %s", number, emit_tla(target_code));
 	}
 
 	newval = make_currency(target, target_code);
